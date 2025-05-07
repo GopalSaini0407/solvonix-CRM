@@ -9,18 +9,18 @@ const breadcrumbItems = [
 ];
 return (
 <div className='header container mx-auto'>
-   <div className='header-top flex justify-between my-3'>
-      <span>Dashboard</span>
+   <div className='header-top flex justify-between items-center my-3'>
+      <span className='font-bold text-[#1F2131] text-2xl'>Dashboard</span>
       <Breadcrumbs items={breadcrumbItems} />
    </div>
-   <div className="header-bottom border rounded px-3 py-1 flex items-center justify-between">
-      <div className="filter-icons flex items-center">
+   <div className="header-bottom border-[1px] border-[#e6e0e0] md:flex-row flex-col rounded px-3 py-1 flex items-center justify-between bg-white">
+      <div className="filter-icons flex items-center my-3 md:my-0">
          <span>Filters</span>
          <FunnelIcon className="h-4 w-4 mx-2 text-gray-400" />
       </div>
-      <div className="right-header-bottom  items-center grid grid-cols-3 gap-4">
-         <div class="all-select h-full">
-            <select id="dummy" name="dummy" class="block w-full h-full px-3 py-2 bg-[#242424] border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      <div className="right-header-bottom  items-center grid md:grid-cols-3 grid-cols-1 gap-4">
+         <div class="all-select">
+            <select id="dummy" name="dummy" class="block h-full px-3 w-100 md:w-60 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                <option value="">All selected</option>
                <option value="dummy">dummy</option>
                <option value="dummy">dummy</option>
@@ -31,7 +31,7 @@ return (
                list="cities"
                id="city"
                name="city"
-               class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+               class="border border-gray-300 rounded-md px-3 py-1 h-[37px] w-100 md:w-60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                placeholder="Locations"
                />
             <datalist id="cities">

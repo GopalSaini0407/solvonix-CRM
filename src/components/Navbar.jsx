@@ -5,13 +5,13 @@ const navigation = [
   { name: 'Dashboard', href: '#', current: true },
   { name: 'Employees', href: '#', current: false },
   { name: 'Leads', href: '#', current: false },
-  { name: 'DSA', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-gray-500" />},
+  { name: 'DSA', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-white" />},
   { name: 'Deals', href: '#', current: false },
   { name: 'Roles', href: '#', current: false },
   { name: 'Navigations', href: '#', current: false },
-  { name: 'Layouts', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-gray-500" />},
+  { name: 'Layouts', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-white" />},
   { name: 'Notifications', href: '#', current: false },
-  { name: 'Loans', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-gray-500" />},
+  { name: 'Loans', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-white" />},
 ]
 
 function classNames(...classes) {
@@ -20,7 +20,7 @@ function classNames(...classes) {
 
 export default function Navbar() {
   return (
-    <Disclosure as="nav" className="bg-gray-800">
+    <Disclosure as="nav" className="text-white bg-[#EF6D8D]">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-3">
         <div className="relative flex h-16 items-center justify-between">
           <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -33,22 +33,22 @@ export default function Navbar() {
             </DisclosureButton>
           </div>
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            <div className="flex shrink-0 items-center">
+            <div className="flex shrink-0 items-center bg-[#EF6D8D] p-[16px]">
               <img
                 alt="Your Company"
-                src="images/logo.png"
+                src="images/logo-crm.png"
                 className="h-8 w-auto"
               />
             </div>
-            <div className="hidden sm:ml-6 sm:block">
-              <div className="flex space-x-0">
+            <div className="hidden sm:ml-6 sm:block md:flex">
+              <div className="flex space-x-0 items-center">
                 {navigation.map((item) => (
                   <a
                     key={item.name}
                     href={item.href}
                     aria-current={item.current ? 'page' : undefined}
                     className={classNames(
-                      item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                      item.current ? 'bg-white text-[#EF6D8D]' : 'text-white hover:bg-white hover:text-[#EF6D8D]',
                       'rounded-md px-3 py-2 text-sm font-medium flex items-center',
                     )}
                   >
