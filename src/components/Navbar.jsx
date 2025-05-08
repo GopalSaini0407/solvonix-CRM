@@ -5,13 +5,30 @@ const navigation = [
   { name: 'Dashboard', href: '#', current: true },
   { name: 'Employees', href: '#', current: false },
   { name: 'Leads', href: '#', current: false },
-  { name: 'DSA', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-white" />},
+
+  { name: 'DSA', href: '', current: false ,  submenu: [
+
+    { label: "dummy1", href: "/services/web-design" },
+    { label: "dummy2", href: "/services/seo" }
+
+  ],Icon:<ChevronDownIcon className="h-4 w-4 text-white submenuIcon" />},
+
   { name: 'Deals', href: '#', current: false },
   { name: 'Roles', href: '#', current: false },
   { name: 'Navigations', href: '#', current: false },
-  { name: 'Layouts', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-white" />},
+  { name: 'Layouts', href: '#', current: false ,
+    submenu: [
+      { label: "Layout1", href: "/services/web-design" },
+      { label: "Layout2", href: "/services/seo" }
+    ],Icon:<ChevronDownIcon className="h-4 w-4 text-white submenuIcon" />},
   { name: 'Notifications', href: '#', current: false },
-  { name: 'Loans', href: '#', current: false ,Icon:<ChevronDownIcon className="h-4 w-4 text-white" />},
+  { name: 'Loans', href: '#', current: false ,
+    submenu: [
+      { label: "Loan1", href: "/services/web-design" },
+      { label: "Loan2", href: "/services/seo" },
+      { label: "Loan3", href: "/services/seo" }
+
+    ],Icon:<ChevronDownIcon className="h-4 w-4 text-white submenuIcon" />},
 ]
 
 function classNames(...classes) {
@@ -25,7 +42,7 @@ export default function Navbar() {
         <div className="relative flex h-16 items-center justify-between">
           <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
             {/* Mobile menu button*/}
-            <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset">
+            <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset">
               <span className="absolute -inset-0.5" />
               <span className="sr-only">Open main menu</span>
               <Bars3Icon aria-hidden="true" className="block size-6 group-data-open:hidden" />
@@ -49,13 +66,29 @@ export default function Navbar() {
                     aria-current={item.current ? 'page' : undefined}
                     className={classNames(
                       item.current ? 'bg-white text-[#EF6D8D]' : 'text-white hover:bg-white hover:text-[#EF6D8D]',
-                      'rounded-md px-3 py-2 text-sm font-medium flex items-center',
+                      'rounded-md px-3 py-2 mr-1 text-sm font-medium flex items-center relative group transition menu',
                     )}
                   >
+                    <>
                     {item.name}
                  <span className='ms-1'>{item.Icon}</span>   
-                    
+                 <ul className="absolute hidden group-hover:block bg-white text-[#EF6D8D] mt-2 rounded shadow-md w-48 z-50 top-7 transition">
+                    {item.submenu && item.submenu.map((subItem, subIndex) => {
+                      return(<li key={subIndex} className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition" >
+                             <a href={subItem.href} >{subItem.label}</a>
+                      </li>)
+                    }
+                      
+                      
+                    )}
+                  </ul>
+                    </>
+                
+ 
+
+
                   </a>
+                  
                 ))}
               </div>
             </div>
@@ -69,7 +102,7 @@ export default function Navbar() {
               <span className="sr-only">View notifications</span>
               <EnvelopeIcon aria-hidden="true" className="size-6" />
             </button>
-            <span class="inline-flex items-center rounded-md mb-5 -ml-3 z-10 bg-gray-50 px-[5px] py-[1px] text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">0</span>
+            <span className="inline-flex items-center rounded-md mb-5 -ml-3 z-10 bg-gray-50 px-[5px] py-[1px] text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">0</span>
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <div>
@@ -118,21 +151,38 @@ export default function Navbar() {
         </div>
       </div>
 
-      <DisclosurePanel className="sm:hidden">
+      <DisclosurePanel className="md:hidden">
         <div className="space-y-1 px-2 pt-2 pb-3">
           {navigation.map((item) => (
-            <DisclosureButton
+            <>
+              <DisclosureButton
               key={item.name}
               as="a"
               href={item.href}
               aria-current={item.current ? 'page' : undefined}
               className={classNames(
-                item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                'block rounded-md px-3 py-2 text-base font-medium',
+                item.current ? 'bg-white text-[#EF6D8D]' : 'text-white hover:bg-white hover:text-[#EF6D8D]',
+                'flex items-center justify-between rounded-md px-3 py-2 text-base font-medium relative group',
               )}
             >
               {item.name}
+              <span className='ms-1'>{item.Icon}</span>   
+
             </DisclosureButton>
+              <DisclosurePanel className="absolute hidden group-hover:block bg-white text-[#EF6D8D] mt-2 rounded shadow-md w-48 z-50 top-7 transition">
+                    {item.submenu && item.submenu.map((sub, subIdx) => (
+                      <a
+                        key={subIdx}
+                        href={sub.href}
+                        className="block rounded-md px-3 py-2 text-sm text-white hover:bg-white hover:text-[#EF6D8D]"
+                      >
+                        {sub.label}
+                      </a>
+                    ))}
+                  </DisclosurePanel>
+
+            </>
+          
           ))}
         </div>
       </DisclosurePanel>

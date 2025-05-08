@@ -19,19 +19,19 @@ return (
          <FunnelIcon className="h-4 w-4 mx-2 text-gray-400" />
       </div>
       <div className="right-header-bottom  items-center grid md:grid-cols-3 grid-cols-1 gap-4">
-         <div class="all-select">
-            <select id="dummy" name="dummy" class="block h-full px-3 w-100 md:w-60 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+         <div className="all-select">
+            <select id="dummy" name="dummy" className="block h-full px-3 w-100 md:w-60 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                <option value="">All selected</option>
                <option value="dummy">dummy</option>
                <option value="dummy">dummy</option>
             </select>
          </div>
-         <div class="locations">
+         <div className="locations">
             <input
                list="cities"
                id="city"
                name="city"
-               class="border border-gray-300 rounded-md px-3 py-1 h-[37px] w-100 md:w-60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+               className="border border-gray-300 rounded-md px-3 py-1 h-[37px] w-100 md:w-60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                placeholder="Locations"
                />
             <datalist id="cities">
