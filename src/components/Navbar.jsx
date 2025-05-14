@@ -1,12 +1,12 @@
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { Bars3Icon,EnvelopeIcon, XMarkIcon ,ChevronDownIcon} from '@heroicons/react/24/outline'
-
+import { useState } from 'react'
 const navigation = [
-  { name: 'Dashboard', href: '#', current: true },
-  { name: 'Employees', href: '#', current: false },
+  { name: 'Dashboard', href: '/', current: true },
+  { name: 'Employees', href: '/', current: false },
   { name: 'Leads', href: '#', current: false },
 
-  { name: 'DSA', href: '', current: false ,  submenu: [
+  { name: 'DSA', href: '#', current: false ,  submenu: [
 
     { label: "dummy1", href: "/services/web-design" },
     { label: "dummy2", href: "/services/seo" }
@@ -36,6 +36,11 @@ function classNames(...classes) {
 }
 
 export default function Navbar() {
+  const [openIndex, setOpenIndex] = useState(null)
+
+  const handleSubmenuToggle = (index) => {
+    setOpenIndex(openIndex === index ? null : index)
+  }
   return (
     <Disclosure as="nav" className="text-white bg-[#EF6D8D]">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-3">
@@ -59,9 +64,9 @@ export default function Navbar() {
             </div>
             <div className="hidden sm:ml-6 sm:block md:flex">
               <div className="flex space-x-0 items-center">
-                {navigation.map((item) => (
-                  <a
-                    key={item.name}
+                {navigation.map((item,ind) => (
+                 <a
+                    key={ind}
                     href={item.href}
                     aria-current={item.current ? 'page' : undefined}
                     className={classNames(
@@ -70,12 +75,12 @@ export default function Navbar() {
                     )}
                   >
                     <>
-                    {item.name}
+                   {item.name}
                  <span className='ms-1'>{item.Icon}</span>   
                  <ul className="absolute hidden group-hover:block bg-white text-[#EF6D8D] mt-2 rounded shadow-md w-48 z-50 top-7 transition">
                     {item.submenu && item.submenu.map((subItem, subIndex) => {
                       return(<li key={subIndex} className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition" >
-                             <a href={subItem.href} >{subItem.label}</a>
+                             {subItem.label}
                       </li>)
                     }
                       
@@ -151,41 +156,41 @@ export default function Navbar() {
         </div>
       </div>
 
-      <DisclosurePanel className="md:hidden">
-        <div className="space-y-1 px-2 pt-2 pb-3">
-          {navigation.map((item) => (
-            <>
-              <DisclosureButton
-              key={item.name}
-              as="a"
-              href={item.href}
-              aria-current={item.current ? 'page' : undefined}
+      <DisclosurePanel className="sm:hidden">
+      <div className="space-y-1 px-2 pt-2 pb-3">
+        {navigation.map((item, index) => (
+          <div key={item.name}>
+            <button
+              onClick={() => handleSubmenuToggle(index)}
               className={classNames(
-                item.current ? 'bg-white text-[#EF6D8D]' : 'text-white hover:bg-white hover:text-[#EF6D8D]',
-                'flex items-center justify-between rounded-md px-3 py-2 text-base font-medium relative group',
+                item.current
+                  ? 'bg-white text-[#EF6D8D]'
+                  : 'text-white hover:bg-white hover:text-[#EF6D8D]',
+                'w-full flex items-center justify-between rounded-md px-3 py-2 text-base font-medium'
               )}
             >
               {item.name}
-              <span className='ms-1'>{item.Icon}</span>   
+              <span className="ms-1">{item.Icon}</span>
+            </button>
 
-            </DisclosureButton>
-              <DisclosurePanel className="absolute hidden group-hover:block bg-white text-[#EF6D8D] mt-2 rounded shadow-md w-48 z-50 top-7 transition">
-                    {item.submenu && item.submenu.map((sub, subIdx) => (
-                      <a
-                        key={subIdx}
-                        href={sub.href}
-                        className="block rounded-md px-3 py-2 text-sm text-white hover:bg-white hover:text-[#EF6D8D]"
-                      >
-                        {sub.label}
-                      </a>
-                    ))}
-                  </DisclosurePanel>
+            {item.submenu && openIndex === index && (
+              <div className="pl-4 mt-1">
+                {item.submenu.map((sub, subIdx) => (
+                  <a
+                    key={subIdx}
+                    href={sub.href}
+                    className="block rounded-md px-3 py-2 text-sm text-white hover:bg-white hover:text-[#EF6D8D]"
+                  >
+                    {sub.label}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </DisclosurePanel>
 
-            </>
-          
-          ))}
-        </div>
-      </DisclosurePanel>
     </Disclosure>
   )
 }

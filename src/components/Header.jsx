@@ -8,7 +8,7 @@ const breadcrumbItems = [
 { label: 'Dashboard', href: '/dashboard/x' },
 ];
 return (
-<div className='header container mx-auto'>
+<div className='header container sm:mx-auto mx-3'>
    <div className='header-top flex justify-between items-center my-3'>
       <span className='font-bold text-[#1F2131] text-2xl'>Dashboard</span>
       <Breadcrumbs items={breadcrumbItems} />
