@@ -38,13 +38,13 @@ const DateRangePicker = () => {
   };
 
   return (
-    <div className="relative w-fit mx-auto">
+    <div className="relative w-full">
       <input
         type="text"
         readOnly
         onClick={() => setShowPicker(!showPicker)}
         value={formatDateRange(state[0].startDate, state[0].endDate)}
-        className="border border-gray-300 rounded px-4 py-1 h-[37px] w-100 md:w-60 cursor-pointer shadow-sm hover:border-blue-400 focus:outline-none focus:ring focus:ring-blue-200"
+        className="border border-gray-300 rounded px-4 py-1 h-[37px] w-full lg:w-60 cursor-pointer shadow-sm hover:border-blue-400 focus:outline-none focus:ring focus:ring-blue-200"
       />
 
       {showPicker && (

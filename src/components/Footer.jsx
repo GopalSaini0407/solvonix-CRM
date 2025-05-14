@@ -2,7 +2,7 @@ import React from 'react'
 
 function Footer() {
   return (
-    <div className='footer container mx-auto my-5'>
+    <div className='footer container mx-auto  my-5'>
       <div className='bg-white px-5 py-4 rounded-md shadow-2xl'>
         <div className='mb-3'>
           <span className='font-medium text-gray-700 text-[14px]'>Upcoming Calls - 0</span>

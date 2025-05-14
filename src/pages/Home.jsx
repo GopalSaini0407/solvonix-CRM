@@ -99,7 +99,7 @@ heading:"PENDING TASK",value:0,
 ]
 function Home() {
 return (
-<div className='home-pages container mx-auto'>
+<div className='home-pages container mx-auto  px-4'>
    <section className='home-section-one mt-3'>
       <div className="flex flex-col sm:flex-row mx-3 sm:mx-0 gap-5 sm:gap-0">
          <div className="gift-box sm:basis-1/10  sm:me-5 bg-white rounded shadow-2xl h-[102.5px] max-h-[102.5px]">
@@ -108,7 +108,7 @@ return (
             </div>
          </div>
          <div className='sm:basis-9/10'>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                {
                giftData.map((data,ind)=>(
                <ul class="bg-white shadow-2xl text-black py-3 relative rounded h-[102.5px]" key={ind}>
@@ -132,7 +132,7 @@ return (
             </div>
          </div>
          <div className='sm:basis-9/10'>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                {
                groupData.map((data,ind)=>(
                <ul class="bg-white shadow-2xl text-black py-3 relative rounded h-[102.5px]" key={ind}>
@@ -156,7 +156,7 @@ return (
             </div>
          </div>
          <div className='sm:basis-9/10'>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                {
                okData.map((data,ind)=>(
                <ul class="bg-white shadow-2xl text-black py-3 relative rounded h-[102.5px]" key={ind}>
@@ -180,7 +180,7 @@ return (
             </div>
          </div>
          <div className='sm:basis-9/10'>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                {
                paymentData.map((data,ind)=>(
                <ul class="bg-white shadow-2xl text-black py-3 relative rounded" key={ind}>
@@ -204,7 +204,7 @@ return (
             </div>
          </div>
          <div className='sm:basis-9/10'>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                {
                calenderData.map((data,ind)=>(
                <ul class="bg-white shadow-2xl text-black py-3 relative rounded h-[102.5px]" key={ind}>

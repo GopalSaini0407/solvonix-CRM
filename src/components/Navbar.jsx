@@ -43,7 +43,7 @@ export default function Navbar() {
   }
   return (
     <Disclosure as="nav" className="text-white bg-[#EF6D8D]">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-3">
+      <div className="container mx-auto px-4">
         <div className="relative flex h-16 items-center justify-between">
           <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
             {/* Mobile menu button*/}
