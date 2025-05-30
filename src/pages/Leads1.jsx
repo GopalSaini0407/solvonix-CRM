@@ -1,33 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import {
-  Plus,
-  Search,
-  Filter,
-  Phone,
-  Mail,
-  Calendar,
-  DollarSign,
-  User,
-  Building,
-  X,
-  MoreHorizontal,
-} from "lucide-react"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  Tooltip,
-} from "recharts"
+import { Plus, Search, Filter, Phone, Mail, Calendar, DollarSign, User, Building, X } from "lucide-react"
 
 const initialStages = [
   {
@@ -165,51 +139,8 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState(null)
   const [isLeadDetailOpen, setIsLeadDetailOpen] = useState(false)
   const [editingLead, setEditingLead] = useState({})
-  const [activeTab, setActiveTab] = useState("cards")
-  const [dropdownOpen, setDropdownOpen] = useState({})
 
   const dragCounter = useRef(0)
-
-  // Get all leads for table view and analytics
-  const allLeads = stages.flatMap((stage) =>
-    stage.leads.map((lead) => ({ ...lead, stage: stage.name, stageId: stage.id })),
-  )
-
-  // Filter leads based on search term
-  const filteredLeads = allLeads.filter(
-    (lead) =>
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
-
-  // Analytics data
-  const leadsBySource = [
-    { name: "Website", value: allLeads.filter((lead) => lead.source === "Website").length, fill: "#3B82F6" },
-    { name: "Referral", value: allLeads.filter((lead) => lead.source === "Referral").length, fill: "#10B981" },
-    { name: "Cold Call", value: allLeads.filter((lead) => lead.source === "Cold Call").length, fill: "#F59E0B" },
-    { name: "LinkedIn", value: allLeads.filter((lead) => lead.source === "LinkedIn").length, fill: "#8B5CF6" },
-    { name: "Trade Show", value: allLeads.filter((lead) => lead.source === "Trade Show").length, fill: "#EF4444" },
-  ].filter((item) => item.value > 0)
-
-  const leadsByStage = stages.map((stage, index) => {
-    const colors = ["#3B82F6", "#F59E0B", "#F97316", "#8B5CF6", "#10B981", "#EF4444"]
-    return {
-      name: stage.name,
-      count: stage.leads.length,
-      value: stage.leads.reduce((sum, lead) => sum + lead.value, 0),
-      fill: colors[index] || "#6B7280",
-    }
-  })
-
-  const monthlyData = [
-    { month: "Jan", leads: 12, converted: 3 },
-    { month: "Feb", leads: 15, converted: 4 },
-    { month: "Mar", leads: 18, converted: 6 },
-    { month: "Apr", leads: 22, converted: 8 },
-    { month: "May", leads: 19, converted: 5 },
-    { month: "Jun", leads: allLeads.length, converted: stages.find((s) => s.id === "won")?.leads.length || 0 },
-  ]
 
   const handleDragStart = (lead, stageId) => {
     setDraggedLead(lead)
@@ -334,13 +265,6 @@ export default function LeadsPage() {
     setEditingLead({})
   }
 
-  const toggleDropdown = (leadId) => {
-    setDropdownOpen((prev) => ({
-      ...prev,
-      [leadId]: !prev[leadId],
-    }))
-  }
-
   const filteredStages = stages.map((stage) => ({
     ...stage,
     leads: stage.leads.filter(
@@ -356,29 +280,6 @@ export default function LeadsPage() {
     (total, stage) => total + stage.leads.reduce((stageTotal, lead) => stageTotal + lead.value, 0),
     0,
   )
-
-  const getStageColor = (stageId) => {
-    const stage = stages.find((s) => s.id === stageId)
-    return stage ? stage.color : "bg-gray-500"
-  }
-
-  const getPriorityColor = (value) => {
-    if (value >= 100000) return "bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium"
-    if (value >= 50000) return "bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium"
-    return "bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium"
-  }
-
-  const getStageBadgeColor = (stageId) => {
-    const colors = {
-      new: "bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium",
-      contacted: "bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium",
-      qualified: "bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium",
-      proposal: "bg-purple-500 text-white px-2 py-1 rounded-full text-xs font-medium",
-      won: "bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium",
-      lost: "bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium",
-    }
-    return colors[stageId] || "bg-gray-500 text-white px-2 py-1 rounded-full text-xs font-medium"
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -442,7 +343,7 @@ export default function LeadsPage() {
           </div>
 
           {/* Search and Filter */}
-          <div className="flex items-center space-x-4 mb-6">
+          <div className="flex items-center space-x-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
@@ -453,341 +354,81 @@ export default function LeadsPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors">
+            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
               <Filter className="w-4 h-4" />
               Filter
             </button>
           </div>
         </div>
 
-        {/* Custom Tabs */}
-        <div className="space-y-6">
-          {/* Tab Navigation */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => setActiveTab("cards")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "cards"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Card View
-              </button>
-              <button
-                onClick={() => setActiveTab("table")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "table"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Table View
-              </button>
-              <button
-                onClick={() => setActiveTab("analytics")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "analytics"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Analytics
-              </button>
-            </nav>
-          </div>
+        {/* Kanban Board */}
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+          {filteredStages.map((stage) => (
+            <div
+              key={stage.id}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]"
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, stage.id)}
+            >
+              <div className={`${stage.color} text-white p-4 rounded-t-lg`}>
+                <h3 className="font-semibold text-sm">{stage.name}</h3>
+                <p className="text-xs opacity-90">{stage.leads.length} leads</p>
+              </div>
 
-          {/* Card View (Kanban Board) */}
-          {activeTab === "cards" && (
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-              {filteredStages.map((stage) => (
-                <div
-                  key={stage.id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]"
-                  onDragOver={handleDragOver}
-                  onDragEnter={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, stage.id)}
-                >
-                  <div className={`${stage.color} text-white p-4 rounded-t-lg`}>
-                    <h3 className="font-semibold text-sm">{stage.name}</h3>
-                    <p className="text-xs opacity-90">{stage.leads.length} leads</p>
-                  </div>
-
-                  <div className="p-4 space-y-3">
-                    {stage.leads.map((lead) => (
-                      <div
-                        key={lead.id}
-                        className="bg-white border border-gray-200 rounded-lg p-4 cursor-move hover:shadow-md transition-shadow"
-                        draggable
-                        onDragStart={() => handleDragStart(lead, stage.id)}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          handleLeadClick(lead, stage.id)
-                        }}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                              {lead.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-sm text-gray-900">{lead.name}</h4>
-                              <p className="text-xs text-gray-500">{lead.company}</p>
-                            </div>
-                          </div>
+              <div className="p-4 space-y-3">
+                {stage.leads.map((lead) => (
+                  <div
+                    key={lead.id}
+                    className="bg-white border border-gray-200 rounded-lg p-4 cursor-move hover:shadow-md transition-shadow"
+                    draggable
+                    onDragStart={() => handleDragStart(lead, stage.id)}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleLeadClick(lead, stage.id)
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                          {lead.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center text-xs text-gray-600">
-                            <Mail className="w-3 h-3 mr-1" />
-                            <span className="truncate">{lead.email}</span>
-                          </div>
-                          {lead.phone && (
-                            <div className="flex items-center text-xs text-gray-600">
-                              <Phone className="w-3 h-3 mr-1" />
-                              <span>{lead.phone}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between">
-                            <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                              ₹{lead.value.toLocaleString()}
-                            </span>
-                            <span className="text-xs text-gray-500">{lead.source}</span>
-                          </div>
-                          {lead.assignedTo && (
-                            <div className="text-xs text-gray-600">Assigned to: {lead.assignedTo}</div>
-                          )}
-                          {lead.notes && <p className="text-xs text-gray-600 line-clamp-2">{lead.notes}</p>}
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-900">{lead.name}</h4>
+                          <p className="text-xs text-gray-500">{lead.company}</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                    </div>
 
-          {/* Table View */}
-          {activeTab === "table" && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">All Leads</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Company
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Phone
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Value
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Stage
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Source
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Assigned To
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredLeads.map((lead) => (
-                      <tr key={lead.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                              {lead.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">{lead.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.company}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.phone}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={getPriorityColor(lead.value)}>₹{lead.value.toLocaleString()}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={getStageBadgeColor(lead.stageId)}>{lead.stage}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.source}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.assignedTo}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.createdAt}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div className="relative">
-                            <button
-                              onClick={() => toggleDropdown(lead.id)}
-                              className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                            {dropdownOpen[lead.id] && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                                <div className="py-1">
-                                  <button
-                                    onClick={() => {
-                                      handleLeadClick(lead, lead.stageId)
-                                      setDropdownOpen({})
-                                    }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  >
-                                    Edit Lead
-                                  </button>
-                                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    View Details
-                                  </button>
-                                  <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-xs text-gray-600">
+                        <Mail className="w-3 h-3 mr-1" />
+                        <span className="truncate">{lead.email}</span>
+                      </div>
+                      {lead.phone && (
+                        <div className="flex items-center text-xs text-gray-600">
+                          <Phone className="w-3 h-3 mr-1" />
+                          <span>{lead.phone}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                          ₹{lead.value.toLocaleString()}
+                        </span>
+                        <span className="text-xs text-gray-500">{lead.source}</span>
+                      </div>
+                      {lead.assignedTo && <div className="text-xs text-gray-600">Assigned to: {lead.assignedTo}</div>}
+                      {lead.notes && <p className="text-xs text-gray-600 line-clamp-2">{lead.notes}</p>}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-
-          {/* Analytics View */}
-          {activeTab === "analytics" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Leads by Source */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Leads by Source</h3>
-                  </div>
-                  <div className="p-6">
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={leadsBySource}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                            outerRadius={100}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {leadsBySource.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.fill} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Leads by Stage */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Leads by Stage</h3>
-                  </div>
-                  <div className="p-6">
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={leadsByStage}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Monthly Trend */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Monthly Leads Trend</h3>
-                  </div>
-                  <div className="p-6">
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={monthlyData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <Tooltip />
-                          <Line
-                            type="monotone"
-                            dataKey="leads"
-                            stroke="#3B82F6"
-                            strokeWidth={3}
-                            dot={{ fill: "#3B82F6", strokeWidth: 2, r: 6 }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="converted"
-                            stroke="#10B981"
-                            strokeWidth={3}
-                            dot={{ fill: "#10B981", strokeWidth: 2, r: 6 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pipeline Value */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Pipeline Value by Stage</h3>
-                  </div>
-                  <div className="p-6">
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={leadsByStage}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip formatter={(value) => [`₹${value.toLocaleString()}`, "Value"]} />
-                          <Bar dataKey="value" fill="#10B981" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          ))}
         </div>
 
         {/* Add Lead Modal */}
@@ -911,7 +552,6 @@ export default function LeadsPage() {
             </div>
           </div>
         )}
-
         {/* Lead Detail Modal */}
         {isLeadDetailOpen && selectedLead && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

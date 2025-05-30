@@ -16,6 +16,7 @@ import Meetings from './pages/Meetings';
 import PipelineReport from './pages/Pipline';
 import ForecastReport from './pages/Forcast';
 import ActivityLogs from './pages/Activity';
+import Leads from './pages/Leads1';
 function App() {
 
   return (
@@ -38,6 +39,8 @@ function App() {
       <Route path='/reports/pipeline' element={<PipelineReport/>}></Route>
       <Route path='/reports/forecast' element={<ForecastReport/>}></Route>
       <Route path='/reports/activity' element={<ActivityLogs/>}></Route>
+      <Route path='/leads-1' element={<Leads/>}></Route>
+
       </Routes>
      </BrowserRouter>
 
