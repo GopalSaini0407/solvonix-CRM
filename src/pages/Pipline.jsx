@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
   Calendar,
   ChevronDown,
@@ -23,6 +23,11 @@ import {
   Award,
   Percent,
   AlertCircle,
+  Activity,
+  Eye,
+  Edit,
+  Trash2,
+  Search,
 } from "lucide-react"
 
 const SalesPipelinePage = () => {
@@ -32,9 +37,14 @@ const SalesPipelinePage = () => {
   const [selectedTeamMember, setSelectedTeamMember] = useState("all")
   const [selectedProduct, setSelectedProduct] = useState("all")
   const [selectedRegion, setSelectedRegion] = useState("all")
+  const [selectedStage, setSelectedStage] = useState("all")
+  const [selectedRep, setSelectedRep] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   // Sample data for pipeline stages
-  const pipelineStages = [
+  const [pipelineStages] = useState([
     {
       id: "prospecting",
       name: "Prospecting",
@@ -43,6 +53,7 @@ const SalesPipelinePage = () => {
       conversion: 65,
       trend: 8,
       color: "bg-blue-500",
+      avgTime: 7,
     },
     {
       id: "qualification",
@@ -52,6 +63,7 @@ const SalesPipelinePage = () => {
       conversion: 70,
       trend: 5,
       color: "bg-indigo-500",
+      avgTime: 5,
     },
     {
       id: "needs-analysis",
@@ -61,6 +73,7 @@ const SalesPipelinePage = () => {
       conversion: 75,
       trend: 12,
       color: "bg-purple-500",
+      avgTime: 8,
     },
     {
       id: "proposal",
@@ -70,6 +83,7 @@ const SalesPipelinePage = () => {
       conversion: 80,
       trend: -3,
       color: "bg-orange-500",
+      avgTime: 6,
     },
     {
       id: "negotiation",
@@ -79,6 +93,7 @@ const SalesPipelinePage = () => {
       conversion: 85,
       trend: 4,
       color: "bg-amber-500",
+      avgTime: 4,
     },
     {
       id: "closed-won",
@@ -88,90 +103,238 @@ const SalesPipelinePage = () => {
       conversion: 75,
       trend: 15,
       color: "bg-green-500",
+      avgTime: 0,
     },
-  ]
+  ])
 
   // Sample data for sales reps
-  const salesReps = [
+  const [salesReps] = useState([
     {
+      id: "priya",
       name: "Priya Singh",
       deals: 18,
       value: 1250000,
       conversion: 32,
       avgDealSize: 69444,
       avgCycleLength: 28,
+      quota: 1500000,
+      region: "north",
     },
     {
+      id: "amit",
       name: "Amit Kumar",
       deals: 15,
       value: 980000,
       conversion: 28,
       avgDealSize: 65333,
       avgCycleLength: 32,
+      quota: 1200000,
+      region: "south",
     },
     {
+      id: "neha",
       name: "Neha Agarwal",
       deals: 22,
       value: 1450000,
       conversion: 35,
       avgDealSize: 65909,
       avgCycleLength: 25,
+      quota: 1600000,
+      region: "west",
     },
     {
+      id: "rohit",
       name: "Rohit Verma",
       deals: 12,
       value: 850000,
       conversion: 25,
       avgDealSize: 70833,
       avgCycleLength: 35,
+      quota: 1100000,
+      region: "east",
     },
     {
+      id: "kavya",
       name: "Kavya Sharma",
       deals: 20,
       value: 1350000,
       conversion: 30,
       avgDealSize: 67500,
       avgCycleLength: 30,
+      quota: 1400000,
+      region: "international",
     },
-  ]
+  ])
+
+  // Sample data for deals
+  const [deals] = useState([
+    {
+      id: "1",
+      name: "Enterprise Software Solution",
+      stage: "prospecting",
+      amount: 500000,
+      probability: 20,
+      expectedClose: "2024-03-15",
+      owner: "Priya Singh",
+      company: "Tech Corp",
+      product: "software",
+      region: "north",
+      createdAt: "2024-01-10",
+    },
+    {
+      id: "2",
+      name: "CRM Implementation",
+      stage: "qualification",
+      amount: 300000,
+      probability: 40,
+      expectedClose: "2024-04-10",
+      owner: "Neha Agarwal",
+      company: "StartupXYZ",
+      product: "software",
+      region: "west",
+      createdAt: "2024-01-15",
+    },
+    {
+      id: "3",
+      name: "Cloud Infrastructure Setup",
+      stage: "proposal",
+      amount: 750000,
+      probability: 60,
+      expectedClose: "2024-03-20",
+      owner: "Rohit Verma",
+      company: "Enterprise Ltd",
+      product: "consulting",
+      region: "east",
+      createdAt: "2024-01-08",
+    },
+    {
+      id: "4",
+      name: "Mobile App Development",
+      stage: "negotiation",
+      amount: 400000,
+      probability: 80,
+      expectedClose: "2024-02-15",
+      owner: "Kavya Sharma",
+      company: "Digital Solutions",
+      product: "software",
+      region: "international",
+      createdAt: "2024-01-20",
+    },
+    {
+      id: "5",
+      name: "Website Redesign",
+      stage: "closed-won",
+      amount: 200000,
+      probability: 100,
+      expectedClose: "2024-01-30",
+      owner: "Priya Singh",
+      company: "Local Business",
+      product: "consulting",
+      region: "north",
+      createdAt: "2024-01-05",
+    },
+    {
+      id: "6",
+      name: "Data Analytics Platform",
+      stage: "needs-analysis",
+      amount: 600000,
+      probability: 50,
+      expectedClose: "2024-04-05",
+      owner: "Amit Kumar",
+      company: "Analytics Inc",
+      product: "software",
+      region: "south",
+      createdAt: "2024-01-12",
+    },
+  ])
 
   // Sample data for monthly trends
   const monthlyTrends = [
-    { month: "Jan", value: 950000, deals: 14 },
-    { month: "Feb", value: 1050000, deals: 16 },
-    { month: "Mar", value: 1200000, deals: 18 },
-    { month: "Apr", value: 980000, deals: 15 },
-    { month: "May", value: 1150000, deals: 17 },
-    { month: "Jun", value: 1300000, deals: 20 },
-    { month: "Jul", value: 1100000, deals: 16 },
-    { month: "Aug", value: 1250000, deals: 19 },
-    { month: "Sep", value: 1400000, deals: 21 },
-    { month: "Oct", value: 1350000, deals: 20 },
-    { month: "Nov", value: 1500000, deals: 22 },
-    { month: "Dec", value: 1650000, deals: 24 },
+    { month: "Jan", value: 950000, deals: 14, won: 3, lost: 2 },
+    { month: "Feb", value: 1050000, deals: 16, won: 4, lost: 1 },
+    { month: "Mar", value: 1200000, deals: 18, won: 5, lost: 2 },
+    { month: "Apr", value: 980000, deals: 15, won: 3, lost: 3 },
+    { month: "May", value: 1150000, deals: 17, won: 6, lost: 1 },
+    { month: "Jun", value: 1300000, deals: 20, won: 7, lost: 2 },
+    { month: "Jul", value: 1100000, deals: 16, won: 4, lost: 2 },
+    { month: "Aug", value: 1250000, deals: 19, won: 5, lost: 1 },
+    { month: "Sep", value: 1400000, deals: 21, won: 8, lost: 2 },
+    { month: "Oct", value: 1350000, deals: 20, won: 6, lost: 3 },
+    { month: "Nov", value: 1500000, deals: 22, won: 7, lost: 1 },
+    { month: "Dec", value: 1650000, deals: 24, won: 9, lost: 2 },
   ]
 
-  // Calculate total pipeline value
-  const totalPipelineValue = pipelineStages.reduce((sum, stage) => sum + stage.value, 0)
+  // Filter data based on current filters
+  const filteredData = useMemo(() => {
+    const filteredDeals = deals.filter((deal) => {
+      const matchesSearch =
+        deal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        deal.company.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesTeamMember =
+        selectedTeamMember === "all" || deal.owner === salesReps.find((rep) => rep.id === selectedTeamMember)?.name
+      const matchesProduct = selectedProduct === "all" || deal.product === selectedProduct
+      const matchesRegion = selectedRegion === "all" || deal.region === selectedRegion
+      const matchesStage = selectedStage === "all" || deal.stage === selectedStage
 
-  // Calculate weighted pipeline value
-  const weightedPipelineValue = pipelineStages.reduce((sum, stage) => sum + (stage.value * stage.conversion) / 100, 0)
+      return matchesSearch && matchesTeamMember && matchesProduct && matchesRegion && matchesStage
+    })
 
-  // Calculate average deal size
-  const totalDeals = pipelineStages.reduce((sum, stage) => sum + stage.count, 0)
-  const avgDealSize = totalPipelineValue / totalDeals
+    // Calculate filtered pipeline stages
+    const filteredStages = pipelineStages.map((stage) => {
+      const stageDeals = filteredDeals.filter((deal) => deal.stage === stage.id)
+      return {
+        ...stage,
+        count: stageDeals.length,
+        value: stageDeals.reduce((sum, deal) => sum + deal.amount, 0),
+      }
+    })
 
-  // Calculate average sales cycle (in days)
-  const avgSalesCycle = 32
+    // Calculate filtered sales reps
+    const filteredReps = salesReps.map((rep) => {
+      const repDeals = filteredDeals.filter((deal) => deal.owner === rep.name)
+      return {
+        ...rep,
+        deals: repDeals.length,
+        value: repDeals.reduce((sum, deal) => sum + deal.amount, 0),
+      }
+    })
 
-  // Calculate win rate
-  const winRate = (pipelineStages.find((stage) => stage.id === "closed-won")?.count / totalDeals) * 100
+    return {
+      deals: filteredDeals,
+      stages: filteredStages,
+      reps: filteredReps,
+    }
+  }, [deals, pipelineStages, salesReps, searchTerm, selectedTeamMember, selectedProduct, selectedRegion, selectedStage])
 
-  // Calculate conversion rate
-  const conversionRate =
-    (pipelineStages.find((stage) => stage.id === "closed-won")?.count /
-      pipelineStages.find((stage) => stage.id === "prospecting")?.count) *
-    100
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    const totalPipelineValue = filteredData.stages.reduce((sum, stage) => sum + stage.value, 0)
+    const weightedPipelineValue = filteredData.stages.reduce(
+      (sum, stage) => sum + (stage.value * stage.conversion) / 100,
+      0,
+    )
+    const totalDeals = filteredData.stages.reduce((sum, stage) => sum + stage.count, 0)
+    const avgDealSize = totalDeals > 0 ? totalPipelineValue / totalDeals : 0
+    const avgSalesCycle = 32
+    const winRate =
+      totalDeals > 0
+        ? ((filteredData.stages.find((stage) => stage.id === "closed-won")?.count || 0) / totalDeals) * 100
+        : 0
+    const conversionRate =
+      pipelineStages[0].count > 0
+        ? ((filteredData.stages.find((stage) => stage.id === "closed-won")?.count || 0) / pipelineStages[0].count) * 100
+        : 0
+
+    return {
+      totalPipelineValue,
+      weightedPipelineValue,
+      totalDeals,
+      avgDealSize,
+      avgSalesCycle,
+      winRate,
+      conversionRate,
+    }
+  }, [filteredData, pipelineStages])
 
   // Format currency
   const formatCurrency = (value) => {
@@ -186,17 +349,59 @@ const SalesPipelinePage = () => {
     }
   }
 
-  // Calculate funnel heights based on deal count
-  const maxCount = Math.max(...pipelineStages.map((stage) => stage.count))
-  const getHeight = (count) => {
-    return Math.max(40, (count / maxCount) * 100)
+  // Handle refresh
+  const handleRefresh = () => {
+    setRefreshing(true)
+    setTimeout(() => {
+      setRefreshing(false)
+    }, 2000)
   }
 
-  // Calculate bar widths based on deal value
-  const maxValue = Math.max(...pipelineStages.map((stage) => stage.value))
-  const getWidth = (value) => {
-    return (value / maxValue) * 100
+  // Handle export
+  const handleExport = () => {
+    const csvData = [
+      ["Deal Name", "Stage", "Amount", "Probability", "Expected Close", "Owner", "Company"],
+      ...filteredData.deals.map((deal) => [
+        deal.name,
+        deal.stage,
+        deal.amount,
+        deal.probability,
+        deal.expectedClose,
+        deal.owner,
+        deal.company,
+      ]),
+    ]
+
+    const csvContent = csvData.map((row) => row.join(",")).join("\n")
+    const blob = new Blob([csvContent], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `sales-pipeline-${new Date().toISOString().split("T")[0]}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
   }
+
+  // Handle share
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: "Sales Pipeline Report",
+        text: `Pipeline Value: ${formatCurrency(metrics.totalPipelineValue)}, Total Deals: ${metrics.totalDeals}`,
+        url: window.location.href,
+      })
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+      alert("Link copied to clipboard!")
+    }
+  }
+
+  // Calculate chart dimensions
+  const maxCount = Math.max(...filteredData.stages.map((stage) => stage.count))
+  const maxValue = Math.max(...filteredData.stages.map((stage) => stage.value))
+
+  const getHeight = (count) => Math.max(40, (count / maxCount) * 100)
+  const getWidth = (value) => (value / maxValue) * 100
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -208,17 +413,27 @@ const SalesPipelinePage = () => {
               <h1 className="text-3xl font-bold text-gray-900">Sales Pipeline</h1>
               <p className="text-gray-600 mt-1">Analyze your sales pipeline performance and trends</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                onClick={handleExport}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors"
+              >
                 <Download className="w-4 h-4" />
                 Export
               </button>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+              <button
+                onClick={handleShare}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors"
+              >
                 <Share2 className="w-4 h-4" />
                 Share
               </button>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-                <RefreshCcw className="w-4 h-4" />
+              <button
+                onClick={handleRefresh}
+                className={`px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors ${refreshing ? "opacity-50" : ""}`}
+                disabled={refreshing}
+              >
+                <RefreshCcw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
                 Refresh
               </button>
             </div>
@@ -252,11 +467,11 @@ const SalesPipelinePage = () => {
                   className="border-none text-sm focus:ring-0 focus:outline-none pr-8"
                 >
                   <option value="all">All Team Members</option>
-                  <option value="priya">Priya Singh</option>
-                  <option value="amit">Amit Kumar</option>
-                  <option value="neha">Neha Agarwal</option>
-                  <option value="rohit">Rohit Verma</option>
-                  <option value="kavya">Kavya Sharma</option>
+                  {salesReps.map((rep) => (
+                    <option key={rep.id} value={rep.id}>
+                      {rep.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -296,12 +511,87 @@ const SalesPipelinePage = () => {
               </div>
 
               <div className="ml-auto">
-                <button className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                >
                   Advanced Filters
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showAdvancedFilters ? "rotate-180" : ""}`} />
                 </button>
               </div>
             </div>
+
+            {/* Advanced Filters */}
+            {showAdvancedFilters && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Search Deals</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        type="text"
+                        placeholder="Search deals or companies..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Stage</label>
+                    <select
+                      value={selectedStage}
+                      onChange={(e) => setSelectedStage(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Stages</option>
+                      {pipelineStages.map((stage) => (
+                        <option key={stage.id} value={stage.id}>
+                          {stage.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Sales Rep</label>
+                    <select
+                      value={selectedRep}
+                      onChange={(e) => setSelectedRep(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Reps</option>
+                      {salesReps.map((rep) => (
+                        <option key={rep.id} value={rep.id}>
+                          {rep.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Showing {filteredData.deals.length} of {deals.length} deals
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSearchTerm("")
+                      setSelectedStage("all")
+                      setSelectedRep("all")
+                      setSelectedTeamMember("all")
+                      setSelectedProduct("all")
+                      setSelectedRegion("all")
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -311,7 +601,7 @@ const SalesPipelinePage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Pipeline Value</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPipelineValue)}</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalPipelineValue)}</p>
                 <div className="flex items-center mt-1">
                   <span className="text-xs text-green-600 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -329,7 +619,7 @@ const SalesPipelinePage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Weighted Pipeline</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(weightedPipelineValue)}</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.weightedPipelineValue)}</p>
                 <div className="flex items-center mt-1">
                   <span className="text-xs text-green-600 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -347,7 +637,7 @@ const SalesPipelinePage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Win Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{winRate.toFixed(1)}%</p>
+                <p className="text-2xl font-bold text-gray-900">{metrics.winRate.toFixed(1)}%</p>
                 <div className="flex items-center mt-1">
                   <span className="text-xs text-red-600 flex items-center">
                     <TrendingDown className="w-3 h-3 mr-1" />
@@ -365,7 +655,7 @@ const SalesPipelinePage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Avg. Sales Cycle</p>
-                <p className="text-2xl font-bold text-gray-900">{avgSalesCycle} days</p>
+                <p className="text-2xl font-bold text-gray-900">{metrics.avgSalesCycle} days</p>
                 <div className="flex items-center mt-1">
                   <span className="text-xs text-green-600 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -382,56 +672,25 @@ const SalesPipelinePage = () => {
 
         {/* View Selector */}
         <div className="flex items-center border-b border-gray-200 mb-6">
-          <button
-            onClick={() => setSelectedView("overview")}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedView === "overview"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setSelectedView("by-stage")}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedView === "by-stage"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            By Stage
-          </button>
-          <button
-            onClick={() => setSelectedView("by-rep")}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedView === "by-rep"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            By Sales Rep
-          </button>
-          <button
-            onClick={() => setSelectedView("trends")}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedView === "trends"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Trends
-          </button>
-          <button
-            onClick={() => setSelectedView("forecast")}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedView === "forecast"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Forecast
-          </button>
+          {[
+            { id: "overview", label: "Overview" },
+            { id: "by-stage", label: "By Stage" },
+            { id: "by-rep", label: "By Sales Rep" },
+            { id: "trends", label: "Trends" },
+            { id: "forecast", label: "Forecast" },
+          ].map((view) => (
+            <button
+              key={view.id}
+              onClick={() => setSelectedView(view.id)}
+              className={`px-4 py-3 text-sm font-medium transition-colors ${
+                selectedView === view.id
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {view.label}
+            </button>
+          ))}
         </div>
 
         {/* Overview View */}
@@ -442,45 +701,35 @@ const SalesPipelinePage = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Pipeline Visualization</h2>
                 <div className="flex items-center border border-gray-300 rounded-lg">
-                  <button
-                    onClick={() => setSelectedChart("funnel")}
-                    className={`px-3 py-1.5 text-sm ${
-                      selectedChart === "funnel" ? "bg-blue-100 text-blue-600" : "text-gray-600"
-                    }`}
-                  >
-                    Funnel
-                  </button>
-                  <button
-                    onClick={() => setSelectedChart("bar")}
-                    className={`px-3 py-1.5 text-sm ${
-                      selectedChart === "bar" ? "bg-blue-100 text-blue-600" : "text-gray-600"
-                    }`}
-                  >
-                    Bar
-                  </button>
-                  <button
-                    onClick={() => setSelectedChart("pie")}
-                    className={`px-3 py-1.5 text-sm ${
-                      selectedChart === "pie" ? "bg-blue-100 text-blue-600" : "text-gray-600"
-                    }`}
-                  >
-                    Pie
-                  </button>
+                  {[
+                    { id: "funnel", label: "Funnel" },
+                    { id: "bar", label: "Bar" },
+                    { id: "pie", label: "Pie" },
+                  ].map((chart) => (
+                    <button
+                      key={chart.id}
+                      onClick={() => setSelectedChart(chart.id)}
+                      className={`px-3 py-1.5 text-sm transition-colors ${
+                        selectedChart === chart.id ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {chart.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Funnel Chart */}
               {selectedChart === "funnel" && (
                 <div className="flex flex-col items-center space-y-4 py-4">
-                  {pipelineStages.map((stage, index) => (
+                  {filteredData.stages.map((stage, index) => (
                     <div
                       key={stage.id}
                       className="w-full flex flex-col items-center"
                       style={{ maxWidth: `${100 - index * 8}%` }}
                     >
                       <div
-                        className={`w-full h-${getHeight(stage.count)} ${stage.color} rounded-lg flex items-center justify-center text-white p-4`}
-                        style={{ height: `${getHeight(stage.count)}px` }}
+                        className={`w-full ${stage.color} rounded-lg flex items-center justify-center text-white p-4 min-h-[60px]`}
                       >
                         <div className="text-center">
                           <p className="font-medium">{stage.name}</p>
@@ -489,8 +738,8 @@ const SalesPipelinePage = () => {
                           </p>
                         </div>
                       </div>
-                      {index < pipelineStages.length - 1 && (
-                        <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[15px] border-t-current text-gray-300"></div>
+                      {index < filteredData.stages.length - 1 && (
+                        <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[15px] border-t-gray-300 mt-2"></div>
                       )}
                     </div>
                   ))}
@@ -500,7 +749,7 @@ const SalesPipelinePage = () => {
               {/* Bar Chart */}
               {selectedChart === "bar" && (
                 <div className="space-y-4 py-4">
-                  {pipelineStages.map((stage) => (
+                  {filteredData.stages.map((stage) => (
                     <div key={stage.id} className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-700">{stage.name}</span>
@@ -508,7 +757,7 @@ const SalesPipelinePage = () => {
                       </div>
                       <div className="h-8 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className={`h-full ${stage.color} rounded-full flex items-center pl-3`}
+                          className={`h-full ${stage.color} rounded-full flex items-center pl-3 transition-all duration-500`}
                           style={{ width: `${getWidth(stage.value)}%` }}
                         >
                           <span className="text-xs font-medium text-white">{stage.count} deals</span>
@@ -519,42 +768,61 @@ const SalesPipelinePage = () => {
                 </div>
               )}
 
-              {/* Pie Chart (simplified representation) */}
+              {/* Pie Chart */}
               {selectedChart === "pie" && (
                 <div className="flex flex-col md:flex-row items-center justify-center gap-8 py-8">
                   <div className="relative w-64 h-64">
-                    <div className="absolute inset-0 rounded-full border-8 border-gray-100"></div>
-                    {pipelineStages.map((stage, index) => {
-                      const rotation = index * (360 / pipelineStages.length)
-                      const skew = (stage.value / totalPipelineValue) * 360
-                      return (
-                        <div
-                          key={stage.id}
-                          className={`absolute inset-0 ${stage.color}`}
-                          style={{
-                            clipPath: `polygon(50% 50%, 50% 0%, ${50 + 50 * Math.cos(((rotation + skew) * Math.PI) / 180)}% ${50 - 50 * Math.sin(((rotation + skew) * Math.PI) / 180)}%, 50% 50%)`,
-                            transform: `rotate(${rotation}deg)`,
-                            opacity: 0.9,
-                            borderRadius: "50%",
-                          }}
-                        ></div>
-                      )
-                    })}
+                    <svg className="w-full h-full" viewBox="0 0 200 200">
+                      {filteredData.stages.map((stage, index) => {
+                        const total = metrics.totalPipelineValue
+                        const percentage = total > 0 ? (stage.value / total) * 100 : 0
+                        const angle = (percentage / 100) * 360
+                        const startAngle = filteredData.stages
+                          .slice(0, index)
+                          .reduce((sum, s) => sum + (s.value / total) * 360, 0)
+
+                        const x1 = 100 + 80 * Math.cos(((startAngle - 90) * Math.PI) / 180)
+                        const y1 = 100 + 80 * Math.sin(((startAngle - 90) * Math.PI) / 180)
+                        const x2 = 100 + 80 * Math.cos(((startAngle + angle - 90) * Math.PI) / 180)
+                        const y2 = 100 + 80 * Math.sin(((startAngle + angle - 90) * Math.PI) / 180)
+
+                        const largeArcFlag = angle > 180 ? 1 : 0
+
+                        const pathData = [
+                          `M 100 100`,
+                          `L ${x1} ${y1}`,
+                          `A 80 80 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                          `Z`,
+                        ].join(" ")
+
+                        return (
+                          <path
+                            key={stage.id}
+                            d={pathData}
+                            fill={stage.color.replace("bg-", "#").replace("-500", "")}
+                            className="hover:opacity-80 transition-opacity cursor-pointer"
+                          />
+                        )
+                      })}
+                    </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPipelineValue)}</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalPipelineValue)}</p>
                         <p className="text-sm text-gray-600">Total Pipeline</p>
                       </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    {pipelineStages.map((stage) => (
+                    {filteredData.stages.map((stage) => (
                       <div key={stage.id} className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${stage.color}`}></div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">{stage.name}</p>
                           <p className="text-xs text-gray-600">
-                            {((stage.value / totalPipelineValue) * 100).toFixed(1)}% · {formatCurrency(stage.value)}
+                            {metrics.totalPipelineValue > 0
+                              ? ((stage.value / metrics.totalPipelineValue) * 100).toFixed(1)
+                              : 0}
+                            % · {formatCurrency(stage.value)}
                           </p>
                         </div>
                       </div>
@@ -573,7 +841,7 @@ const SalesPipelinePage = () => {
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm text-gray-600">Total Deals</span>
-                      <span className="text-sm font-medium text-gray-900">{totalDeals}</span>
+                      <span className="text-sm font-medium text-gray-900">{metrics.totalDeals}</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full">
                       <div className="h-full bg-blue-500 rounded-full" style={{ width: "100%" }}></div>
@@ -583,7 +851,7 @@ const SalesPipelinePage = () => {
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm text-gray-600">Avg Deal Size</span>
-                      <span className="text-sm font-medium text-gray-900">{formatCurrency(avgDealSize)}</span>
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(metrics.avgDealSize)}</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full">
                       <div className="h-full bg-purple-500 rounded-full" style={{ width: "85%" }}></div>
@@ -593,17 +861,20 @@ const SalesPipelinePage = () => {
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm text-gray-600">Conversion Rate</span>
-                      <span className="text-sm font-medium text-gray-900">{conversionRate.toFixed(1)}%</span>
+                      <span className="text-sm font-medium text-gray-900">{metrics.conversionRate.toFixed(1)}%</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full">
-                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${conversionRate}%` }}></div>
+                      <div
+                        className="h-full bg-green-500 rounded-full"
+                        style={{ width: `${Math.min(metrics.conversionRate, 100)}%` }}
+                      ></div>
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm text-gray-600">Avg Sales Cycle</span>
-                      <span className="text-sm font-medium text-gray-900">{avgSalesCycle} days</span>
+                      <span className="text-sm font-medium text-gray-900">{metrics.avgSalesCycle} days</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full">
                       <div className="h-full bg-amber-500 rounded-full" style={{ width: "70%" }}></div>
@@ -629,26 +900,29 @@ const SalesPipelinePage = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performers</h3>
                 <div className="space-y-4">
-                  {salesReps.slice(0, 3).map((rep, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-medium">
-                        {rep.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">{rep.name}</p>
-                          <p className="text-sm font-medium text-gray-900">{formatCurrency(rep.value)}</p>
+                  {filteredData.reps
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 3)
+                    .map((rep, index) => (
+                      <div key={rep.id} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-medium">
+                          {rep.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </div>
-                        <div className="flex items-center justify-between mt-1">
-                          <p className="text-xs text-gray-600">{rep.deals} deals</p>
-                          <p className="text-xs text-green-600">{rep.conversion}% win rate</p>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-900">{rep.name}</p>
+                            <p className="text-sm font-medium text-gray-900">{formatCurrency(rep.value)}</p>
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="text-xs text-gray-600">{rep.deals} deals</p>
+                            <p className="text-xs text-green-600">{rep.conversion}% win rate</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
@@ -674,9 +948,9 @@ const SalesPipelinePage = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Stage Conversion</h3>
                 <div className="space-y-4">
-                  {pipelineStages.slice(0, -1).map((stage, index) => {
-                    const nextStage = pipelineStages[index + 1]
-                    const conversionRate = (nextStage.count / stage.count) * 100
+                  {filteredData.stages.slice(0, -1).map((stage, index) => {
+                    const nextStage = filteredData.stages[index + 1]
+                    const conversionRate = stage.count > 0 ? (nextStage.count / stage.count) * 100 : 0
                     return (
                       <div key={stage.id}>
                         <div className="flex items-center justify-between mb-1">
@@ -689,7 +963,13 @@ const SalesPipelinePage = () => {
                         </div>
                         <div className="h-1.5 bg-gray-100 rounded-full">
                           <div
-                            className={`h-full rounded-full ${conversionRate >= 70 ? "bg-green-500" : conversionRate >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              conversionRate >= 70
+                                ? "bg-green-500"
+                                : conversionRate >= 50
+                                  ? "bg-amber-500"
+                                  : "bg-red-500"
+                            }`}
                             style={{ width: `${conversionRate}%` }}
                           ></div>
                         </div>
@@ -744,69 +1024,44 @@ const SalesPipelinePage = () => {
                         Expected Close
                       </th>
                       <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    <tr className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">Enterprise Software Solution</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Prospecting
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">₹5.0L</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">20%</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">15 Mar 2024</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">Priya Singh</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">CRM Implementation</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                          Qualification
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">₹3.0L</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">40%</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">10 Apr 2024</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">Neha Agarwal</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">Cloud Infrastructure Setup</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                          Proposal
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">₹7.5L</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">60%</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">20 Mar 2024</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">Rohit Verma</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">Mobile App Development</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          Negotiation
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">₹4.0L</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">80%</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">15 Feb 2024</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">Kavya Sharma</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">Website Redesign</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Closed Won
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">₹2.0L</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">100%</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">30 Jan 2024</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">Priya Singh</td>
-                    </tr>
+                    {filteredData.deals.slice(0, 5).map((deal) => {
+                      const stage = pipelineStages.find((s) => s.id === deal.stage)
+                      return (
+                        <tr key={deal.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 text-sm text-gray-900">{deal.name}</td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stage?.color.replace("bg-", "bg-").replace("-500", "-100")} ${stage?.color.replace("bg-", "text-").replace("-500", "-800")}`}
+                            >
+                              {stage?.name}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(deal.amount)}</td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{deal.probability}%</td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {new Date(deal.expectedClose).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{deal.owner}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button className="p-1 text-gray-400 hover:text-blue-600">
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button className="p-1 text-gray-400 hover:text-green-600">
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button className="p-1 text-gray-400 hover:text-red-600">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -822,7 +1077,7 @@ const SalesPipelinePage = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Stage Distribution</h3>
                 <div className="space-y-4">
-                  {pipelineStages.map((stage) => (
+                  {filteredData.stages.map((stage) => (
                     <div key={stage.id}>
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
@@ -838,8 +1093,10 @@ const SalesPipelinePage = () => {
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full">
                         <div
-                          className={`h-full ${stage.color} rounded-full`}
-                          style={{ width: `${(stage.value / totalPipelineValue) * 100}%` }}
+                          className={`h-full ${stage.color} rounded-full transition-all duration-500`}
+                          style={{
+                            width: `${metrics.totalPipelineValue > 0 ? (stage.value / metrics.totalPipelineValue) * 100 : 0}%`,
+                          }}
                         ></div>
                       </div>
                     </div>
@@ -851,7 +1108,7 @@ const SalesPipelinePage = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Stage Metrics</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  {pipelineStages.map((stage) => (
+                  {filteredData.stages.map((stage) => (
                     <div key={stage.id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <div className={`w-3 h-3 rounded-full ${stage.color}`}></div>
@@ -895,8 +1152,12 @@ const SalesPipelinePage = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">Stage Details</h3>
-                  <select className="border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                    <option>All Stages</option>
+                  <select
+                    value={selectedStage}
+                    onChange={(e) => setSelectedStage(e.target.value)}
+                    className="border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="all">All Stages</option>
                     {pipelineStages.map((stage) => (
                       <option key={stage.id} value={stage.id}>
                         {stage.name}
@@ -922,7 +1183,7 @@ const SalesPipelinePage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {pipelineStages.map((stage) => (
+                    {filteredData.stages.map((stage) => (
                       <tr key={stage.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -932,9 +1193,11 @@ const SalesPipelinePage = () => {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">{stage.count}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(stage.value)}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(stage.value / stage.count)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {stage.count > 0 ? formatCurrency(stage.value / stage.count) : formatCurrency(0)}
+                        </td>
                         <td className="px-6 py-4 text-sm text-gray-900">{stage.conversion}%</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{Math.floor(Math.random() * 10) + 5} days</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{stage.avgTime} days</td>
                         <td className="px-6 py-4">
                           <span
                             className={`text-sm flex items-center ${stage.trend >= 0 ? "text-green-600" : "text-red-600"}`}
@@ -984,43 +1247,60 @@ const SalesPipelinePage = () => {
                         Avg Cycle
                       </th>
                       <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Quota Attainment
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Performance
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {salesReps.map((rep, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-medium text-sm">
-                              {rep.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
+                    {filteredData.reps.map((rep) => {
+                      const quotaAttainment = (rep.value / rep.quota) * 100
+                      return (
+                        <tr key={rep.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-medium text-sm">
+                                {rep.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </div>
+                              <span className="text-sm font-medium text-gray-900">{rep.name}</span>
                             </div>
-                            <span className="text-sm font-medium text-gray-900">{rep.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{rep.deals}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(rep.value)}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(rep.avgDealSize)}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{rep.conversion}%</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{rep.avgCycleLength} days</td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <div
-                                key={i}
-                                className={`w-2 h-8 rounded-sm ${
-                                  i < Math.ceil(rep.conversion / 10) ? "bg-green-500" : "bg-gray-200"
-                                }`}
-                              ></div>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{rep.deals}</td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(rep.value)}</td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(rep.avgDealSize)}</td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{rep.conversion}%</td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{rep.avgCycleLength} days</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-gray-200 rounded-full">
+                                <div
+                                  className={`h-full rounded-full ${quotaAttainment >= 100 ? "bg-green-500" : quotaAttainment >= 75 ? "bg-yellow-500" : "bg-red-500"}`}
+                                  style={{ width: `${Math.min(quotaAttainment, 100)}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm text-gray-600">{quotaAttainment.toFixed(0)}%</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <div
+                                  key={i}
+                                  className={`w-2 h-8 rounded-sm ${
+                                    i < Math.ceil(rep.conversion / 10) ? "bg-green-500" : "bg-gray-200"
+                                  }`}
+                                ></div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1032,37 +1312,32 @@ const SalesPipelinePage = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Deal Distribution</h3>
                 <div className="space-y-4">
-                  {salesReps.map((rep, index) => (
-                    <div key={index}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-700">{rep.name}</span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm text-gray-600">{rep.deals} deals</span>
-                          <span className="text-sm font-medium text-gray-900 w-24 text-right">
-                            {formatCurrency(rep.value)}
-                          </span>
+                  {filteredData.reps.map((rep, index) => {
+                    const totalValue = filteredData.reps.reduce((sum, r) => sum + r.value, 0)
+                    const colors = ["#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#f43f5e"]
+                    return (
+                      <div key={rep.id}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-gray-700">{rep.name}</span>
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm text-gray-600">{rep.deals} deals</span>
+                            <span className="text-sm font-medium text-gray-900 w-24 text-right">
+                              {formatCurrency(rep.value)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="h-2 bg-gray-100 rounded-full">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${totalValue > 0 ? (rep.value / totalValue) * 100 : 0}%`,
+                              backgroundColor: colors[index % colors.length],
+                            }}
+                          ></div>
                         </div>
                       </div>
-                      <div className="h-2 bg-gray-100 rounded-full">
-                        <div
-                          className={`h-full bg-blue-${500 - index * 100} rounded-full`}
-                          style={{
-                            width: `${(rep.value / salesReps.reduce((sum, r) => sum + r.value, 0)) * 100}%`,
-                            backgroundColor:
-                              index === 0
-                                ? "#3b82f6"
-                                : index === 1
-                                  ? "#6366f1"
-                                  : index === 2
-                                    ? "#8b5cf6"
-                                    : index === 3
-                                      ? "#ec4899"
-                                      : "#f43f5e",
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
 
@@ -1070,12 +1345,12 @@ const SalesPipelinePage = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Win Rate Comparison</h3>
                 <div className="space-y-6">
-                  {salesReps.map((rep, index) => (
-                    <div key={index} className="flex items-center gap-4">
-                      <div className="w-24 text-sm text-gray-700">{rep.name}</div>
+                  {filteredData.reps.map((rep) => (
+                    <div key={rep.id} className="flex items-center gap-4">
+                      <div className="w-24 text-sm text-gray-700">{rep.name.split(" ")[0]}</div>
                       <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-green-500 flex items-center pl-2"
+                          className="h-full bg-green-500 flex items-center pl-2 transition-all duration-500"
                           style={{ width: `${rep.conversion}%` }}
                         >
                           <span className="text-xs font-medium text-white">{rep.conversion}%</span>
@@ -1091,10 +1366,14 @@ const SalesPipelinePage = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Rep Details</h3>
-                <select className="border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                <select
+                  value={selectedRep}
+                  onChange={(e) => setSelectedRep(e.target.value)}
+                  className="border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+                >
                   <option value="all">All Reps</option>
-                  {salesReps.map((rep, index) => (
-                    <option key={index} value={index}>
+                  {salesReps.map((rep) => (
+                    <option key={rep.id} value={rep.id}>
                       {rep.name}
                     </option>
                   ))}
@@ -1109,7 +1388,9 @@ const SalesPipelinePage = () => {
                       <p className="text-sm text-gray-600">Pipeline Value</p>
                       <DollarSign className="w-4 h-4 text-gray-400" />
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(salesReps[0].value)}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {formatCurrency(filteredData.reps[0]?.value || 0)}
+                    </p>
                     <div className="flex items-center mt-2">
                       <span className="text-xs text-green-600 flex items-center">
                         <TrendingUp className="w-3 h-3 mr-1" />
@@ -1123,7 +1404,7 @@ const SalesPipelinePage = () => {
                       <p className="text-sm text-gray-600">Win Rate</p>
                       <Percent className="w-4 h-4 text-gray-400" />
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{salesReps[0].conversion}%</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">{filteredData.reps[0]?.conversion || 0}%</p>
                     <div className="flex items-center mt-2">
                       <span className="text-xs text-green-600 flex items-center">
                         <TrendingUp className="w-3 h-3 mr-1" />
@@ -1137,7 +1418,9 @@ const SalesPipelinePage = () => {
                       <p className="text-sm text-gray-600">Avg Deal Size</p>
                       <Target className="w-4 h-4 text-gray-400" />
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(salesReps[0].avgDealSize)}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {formatCurrency(filteredData.reps[0]?.avgDealSize || 0)}
+                    </p>
                     <div className="flex items-center mt-2">
                       <span className="text-xs text-red-600 flex items-center">
                         <TrendingDown className="w-3 h-3 mr-1" />
@@ -1151,7 +1434,7 @@ const SalesPipelinePage = () => {
                 <div className="col-span-2 p-4 border border-gray-200 rounded-lg">
                   <h4 className="text-sm font-medium text-gray-900 mb-4">Stage Distribution</h4>
                   <div className="space-y-3">
-                    {pipelineStages.map((stage) => (
+                    {filteredData.stages.map((stage) => (
                       <div key={stage.id}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
@@ -1162,8 +1445,10 @@ const SalesPipelinePage = () => {
                         </div>
                         <div className="h-1.5 bg-gray-100 rounded-full">
                           <div
-                            className={`h-full ${stage.color} rounded-full`}
-                            style={{ width: `${(stage.count / totalDeals) * 100}%` }}
+                            className={`h-full ${stage.color} rounded-full transition-all duration-500`}
+                            style={{
+                              width: `${metrics.totalDeals > 0 ? (stage.count / metrics.totalDeals) * 100 : 0}%`,
+                            }}
                           ></div>
                         </div>
                       </div>
@@ -1202,8 +1487,253 @@ const SalesPipelinePage = () => {
                 <h3 className="text-lg font-semibold text-gray-900">Monthly Trends</h3>
                 <div className="flex items-center border border-gray-300 rounded-lg">
                   <button className="px-3 py-1.5 text-sm bg-blue-100 text-blue-600">Value</button>
-                  <button className="px-3 py-1.5 text-sm text-gray-600">Deals</button>
+                  <button className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Deals</button>
+                  <button className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Win Rate</button>
                 </div>
+              </div>
+
+              {/* Simple Line Chart */}
+              <div className="h-64 flex items-end justify-between gap-2 px-4">
+                {monthlyTrends.map((month, index) => {
+                  const maxValue = Math.max(...monthlyTrends.map((m) => m.value))
+                  const height = (month.value / maxValue) * 100
+                  return (
+                    <div key={month.month} className="flex flex-col items-center gap-2">
+                      <div className="text-xs text-gray-600">{formatCurrency(month.value)}</div>
+                      <div
+                        className="w-8 bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer"
+                        style={{ height: `${height}%` }}
+                        title={`${month.month}: ${formatCurrency(month.value)}`}
+                      ></div>
+                      <div className="text-xs text-gray-500">{month.month}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Trend Analysis */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Pipeline Growth</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-green-800">Quarter over Quarter</p>
+                      <p className="text-xs text-green-600">Pipeline value increased</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-green-800">+18.5%</p>
+                      <p className="text-xs text-green-600">vs last quarter</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Deal Velocity</p>
+                      <p className="text-xs text-blue-600">Average time to close</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-blue-800">-5 days</p>
+                      <p className="text-xs text-blue-600">faster than last quarter</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">Conversion Rate</p>
+                      <p className="text-xs text-amber-600">Lead to customer</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-amber-800">24.3%</p>
+                      <p className="text-xs text-amber-600">+2.1% vs last quarter</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Seasonal Patterns</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600">Q1 Performance</span>
+                      <span className="text-sm font-medium text-gray-900">Strong</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full">
+                      <div className="h-full bg-green-500 rounded-full" style={{ width: "85%" }}></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600">Q2 Performance</span>
+                      <span className="text-sm font-medium text-gray-900">Moderate</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full">
+                      <div className="h-full bg-yellow-500 rounded-full" style={{ width: "65%" }}></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600">Q3 Performance</span>
+                      <span className="text-sm font-medium text-gray-900">Excellent</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full">
+                      <div className="h-full bg-green-500 rounded-full" style={{ width: "95%" }}></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600">Q4 Forecast</span>
+                      <span className="text-sm font-medium text-gray-900">Projected</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: "78%" }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Forecast View */}
+        {selectedView === "forecast" && (
+          <div className="space-y-6">
+            {/* Forecast Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Next Quarter Forecast</h3>
+                  <Target className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-600">Projected Revenue</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(4200000)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Confidence Level</p>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 bg-gray-100 rounded-full flex-1">
+                        <div className="h-full bg-green-500 rounded-full" style={{ width: "78%" }}></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">78%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Deal Closure Prediction</h3>
+                  <Activity className="w-5 h-5 text-green-600" />
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-600">Expected Deals</p>
+                    <p className="text-2xl font-bold text-gray-900">24</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">High Probability</p>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 bg-gray-100 rounded-full flex-1">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">16 deals</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Risk Assessment</h3>
+                  <AlertCircle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-600">At Risk Deals</p>
+                    <p className="text-2xl font-bold text-gray-900">3</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Risk Value</p>
+                    <p className="text-lg font-medium text-red-600">{formatCurrency(850000)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Forecast Details */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Forecast Breakdown</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 text-left">
+                    <tr>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Deal</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Probability
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Expected Close
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Weighted Value
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Risk Level
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredData.deals
+                      .filter((deal) => deal.stage !== "closed-won")
+                      .map((deal) => {
+                        const weightedValue = deal.amount * (deal.probability / 100)
+                        const riskLevel = deal.probability >= 70 ? "Low" : deal.probability >= 40 ? "Medium" : "High"
+                        const riskColor =
+                          deal.probability >= 70
+                            ? "text-green-600"
+                            : deal.probability >= 40
+                              ? "text-yellow-600"
+                              : "text-red-600"
+
+                        return (
+                          <tr key={deal.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 text-sm text-gray-900">{deal.name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(deal.amount)}</td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-2 bg-gray-200 rounded-full">
+                                  <div
+                                    className="h-full bg-blue-500 rounded-full"
+                                    style={{ width: `${deal.probability}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-sm text-gray-900">{deal.probability}%</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              {new Date(deal.expectedClose).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{deal.owner}</td>
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                              {formatCurrency(weightedValue)}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`text-sm font-medium ${riskColor}`}>{riskLevel}</span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

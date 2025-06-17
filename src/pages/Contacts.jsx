@@ -1,13 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import {
   Search,
   Filter,
   Plus,
   Grid3X3,
   List,
-  Edit,
   Trash2,
   Phone,
   Mail,
@@ -22,6 +21,7 @@ import {
   Eye,
   MessageCircle,
   Clock,
+  AlertCircle,
 } from "lucide-react"
 
 const ContactsPage = () => {
@@ -33,6 +33,16 @@ const ContactsPage = () => {
   const [isContactDetailOpen, setIsContactDetailOpen] = useState(false)
   const [selectedContact, setSelectedContact] = useState(null)
   const [editingContact, setEditingContact] = useState({})
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [importFile, setImportFile] = useState(null)
+  const [showFilters, setShowFilters] = useState(false)
+  const [filters, setFilters] = useState({
+    tags: [],
+    dateRange: "all",
+    dealValue: "all",
+  })
+
+  const fileInputRef = useRef(null)
 
   const [contacts, setContacts] = useState([
     {
@@ -182,6 +192,7 @@ const ContactsPage = () => {
     { id: "partner", name: "Partners", count: contacts.filter((c) => c.category === "partner").length },
   ]
 
+  // Enhanced filtering logic
   const filteredContacts = contacts.filter((contact) => {
     const matchesSearch =
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -190,8 +201,148 @@ const ContactsPage = () => {
 
     const matchesCategory = selectedCategory === "all" || contact.category === selectedCategory
 
-    return matchesSearch && matchesCategory
+    // Tag filter
+    const matchesTags = filters.tags.length === 0 || filters.tags.some((tag) => contact.tags.includes(tag))
+
+    // Date range filter
+    let matchesDate = true
+    if (filters.dateRange !== "all") {
+      const contactDate = new Date(contact.lastContact)
+      const now = new Date()
+      const daysDiff = Math.floor((now - contactDate) / (1000 * 60 * 60 * 24))
+
+      switch (filters.dateRange) {
+        case "week":
+          matchesDate = daysDiff <= 7
+          break
+        case "month":
+          matchesDate = daysDiff <= 30
+          break
+        case "quarter":
+          matchesDate = daysDiff <= 90
+          break
+      }
+    }
+
+    // Deal value filter
+    let matchesDealValue = true
+    if (filters.dealValue !== "all") {
+      switch (filters.dealValue) {
+        case "high":
+          matchesDealValue = contact.dealValue >= 200000
+          break
+        case "medium":
+          matchesDealValue = contact.dealValue >= 50000 && contact.dealValue < 200000
+          break
+        case "low":
+          matchesDealValue = contact.dealValue < 50000
+          break
+      }
+    }
+
+    return matchesSearch && matchesCategory && matchesTags && matchesDate && matchesDealValue
   })
+
+  // Export functionality
+  const handleExport = (selectedOnly = false) => {
+    const contactsToExport = selectedOnly
+      ? contacts.filter((contact) => selectedContacts.includes(contact.id))
+      : filteredContacts
+
+    const csvContent = [
+      // CSV Headers
+      [
+        "Name",
+        "Email",
+        "Phone",
+        "Company",
+        "Position",
+        "Location",
+        "Category",
+        "Tags",
+        "Deal Value",
+        "Last Contact",
+        "Notes",
+      ].join(","),
+      // CSV Data
+      ...contactsToExport.map((contact) =>
+        [
+          `"${contact.name}"`,
+          `"${contact.email}"`,
+          `"${contact.phone}"`,
+          `"${contact.company}"`,
+          `"${contact.position}"`,
+          `"${contact.location}"`,
+          `"${contact.category}"`,
+          `"${contact.tags.join("; ")}"`,
+          contact.dealValue,
+          contact.lastContact,
+          `"${contact.notes}"`,
+        ].join(","),
+      ),
+    ].join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `contacts_${new Date().toISOString().split("T")[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // Import functionality
+  const handleImport = () => {
+    if (!importFile) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const csv = e.target.result
+        const lines = csv.split("\n")
+        const headers = lines[0].split(",").map((h) => h.replace(/"/g, "").trim())
+
+        const importedContacts = []
+
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i].trim() === "") continue
+
+          const values = lines[i].split(",").map((v) => v.replace(/"/g, "").trim())
+
+          const contact = {
+            id: Date.now() + i,
+            name: values[0] || "",
+            email: values[1] || "",
+            phone: values[2] || "",
+            company: values[3] || "",
+            position: values[4] || "",
+            location: values[5] || "",
+            category: values[6] || "lead",
+            tags: values[7] ? values[7].split(";").map((t) => t.trim()) : [],
+            dealValue: Number.parseInt(values[8]) || 0,
+            lastContact: values[9] || new Date().toISOString().split("T")[0],
+            notes: values[10] || "",
+            avatar: "/placeholder.svg",
+            status: "active",
+            socialMedia: { linkedin: "", twitter: "" },
+            interactions: [],
+          }
+
+          importedContacts.push(contact)
+        }
+
+        setContacts([...contacts, ...importedContacts])
+        setIsImportModalOpen(false)
+        setImportFile(null)
+        alert(`Successfully imported ${importedContacts.length} contacts!`)
+      } catch (error) {
+        alert("Error importing file. Please check the format and try again.")
+      }
+    }
+    reader.readAsText(importFile)
+  }
 
   const handleContactClick = (contact) => {
     setSelectedContact(contact)
@@ -234,14 +385,44 @@ const ContactsPage = () => {
   }
 
   const handleDeleteContact = (contactId) => {
-    setContacts(contacts.filter((contact) => contact.id !== contactId))
-    setIsContactDetailOpen(false)
+    if (confirm("Are you sure you want to delete this contact?")) {
+      setContacts(contacts.filter((contact) => contact.id !== contactId))
+      setIsContactDetailOpen(false)
+    }
+  }
+
+  const handleBulkDelete = () => {
+    if (confirm(`Are you sure you want to delete ${selectedContacts.length} contacts?`)) {
+      setContacts(contacts.filter((contact) => !selectedContacts.includes(contact.id)))
+      setSelectedContacts([])
+    }
   }
 
   const handleSelectContact = (contactId) => {
     setSelectedContacts((prev) =>
       prev.includes(contactId) ? prev.filter((id) => id !== contactId) : [...prev, contactId],
     )
+  }
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedContacts(filteredContacts.map((c) => c.id))
+    } else {
+      setSelectedContacts([])
+    }
+  }
+
+  // Quick actions
+  const handleCall = (contact) => {
+    window.open(`tel:${contact.phone}`)
+  }
+
+  const handleEmail = (contact) => {
+    window.open(`mailto:${contact.email}`)
+  }
+
+  const handleScheduleMeeting = (contact) => {
+    alert(`Schedule meeting functionality would open calendar integration for ${contact.name}`)
   }
 
   const getCategoryColor = (category) => {
@@ -264,22 +445,31 @@ const ContactsPage = () => {
     return icons[type] || <Clock className="w-3 h-3" />
   }
 
+  // Get all unique tags for filter
+  const allTags = [...new Set(contacts.flatMap((contact) => contact.tags))]
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
               <p className="text-gray-600 mt-1">Manage your business relationships</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+              >
                 <Upload className="w-4 h-4" />
                 Import
               </button>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+              <button
+                onClick={() => handleExport(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+              >
                 <Download className="w-4 h-4" />
                 Export
               </button>
@@ -353,7 +543,10 @@ const ContactsPage = () => {
                   className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+              >
                 <Filter className="w-4 h-4" />
                 Filters
               </button>
@@ -363,8 +556,16 @@ const ContactsPage = () => {
               {selectedContacts.length > 0 && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600">{selectedContacts.length} selected</span>
-                  <button className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200">Delete</button>
-                  <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200">
+                  <button
+                    onClick={handleBulkDelete}
+                    className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => handleExport(true)}
+                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
+                  >
                     Export
                   </button>
                 </div>
@@ -385,6 +586,65 @@ const ContactsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                  <select
+                    multiple
+                    value={filters.tags}
+                    onChange={(e) =>
+                      setFilters({ ...filters, tags: Array.from(e.target.selectedOptions, (option) => option.value) })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    {allTags.map((tag) => (
+                      <option key={tag} value={tag}>
+                        {tag}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Contact</label>
+                  <select
+                    value={filters.dateRange}
+                    onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="week">Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="quarter">Last Quarter</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Deal Value</label>
+                  <select
+                    value={filters.dealValue}
+                    onChange={(e) => setFilters({ ...filters, dealValue: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Values</option>
+                    <option value="high">High (₹2L+)</option>
+                    <option value="medium">Medium (₹50K-₹2L)</option>
+                    <option value="low">Low (&lt;₹50K)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => setFilters({ tags: [], dateRange: "all", dealValue: "all" })}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-6">
@@ -492,13 +752,8 @@ const ContactsPage = () => {
                           <input
                             type="checkbox"
                             className="rounded border-gray-300"
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedContacts(filteredContacts.map((c) => c.id))
-                              } else {
-                                setSelectedContacts([])
-                              }
-                            }}
+                            checked={selectedContacts.length === filteredContacts.length && filteredContacts.length > 0}
+                            onChange={(e) => handleSelectAll(e.target.checked)}
                           />
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -509,6 +764,9 @@ const ContactsPage = () => {
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Category
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Deal Value
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Last Contact
@@ -552,6 +810,7 @@ const ContactsPage = () => {
                               {contact.category}
                             </span>
                           </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">₹{contact.dealValue.toLocaleString()}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">
                             {new Date(contact.lastContact).toLocaleDateString()}
                           </td>
@@ -563,13 +822,38 @@ const ContactsPage = () => {
                                   handleContactClick(contact)
                                 }}
                                 className="text-blue-600 hover:text-blue-700"
+                                title="View Details"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
-                              <button className="text-gray-400 hover:text-gray-600">
-                                <Edit className="w-4 h-4" />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleCall(contact)
+                                }}
+                                className="text-green-600 hover:text-green-700"
+                                title="Call"
+                              >
+                                <Phone className="w-4 h-4" />
                               </button>
-                              <button className="text-red-400 hover:text-red-600">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleEmail(contact)
+                                }}
+                                className="text-blue-600 hover:text-blue-700"
+                                title="Email"
+                              >
+                                <Mail className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteContact(contact.id)
+                                }}
+                                className="text-red-400 hover:text-red-600"
+                                title="Delete"
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -581,8 +865,71 @@ const ContactsPage = () => {
                 </div>
               </div>
             )}
+
+            {filteredContacts.length === 0 && (
+              <div className="text-center py-12">
+                <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No contacts found</h3>
+                <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Import Modal */}
+        {isImportModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold">Import Contacts</h2>
+                <button onClick={() => setIsImportModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Upload CSV File</label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setImportFile(e.target.files[0])}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-start">
+                    <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 mr-2" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">CSV Format Required:</p>
+                      <p>
+                        Name, Email, Phone, Company, Position, Location, Category, Tags, Deal Value, Last Contact, Notes
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsImportModalOpen(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImport}
+                    disabled={!importFile}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Import
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Add Contact Modal */}
         {isAddContactOpen && (
@@ -674,17 +1021,21 @@ const ContactsPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
                     <input
                       type="text"
-                      value={newContact.socialMedia.linkedin}
+                      value={newContact.tags.join(", ")}
                       onChange={(e) =>
                         setNewContact({
                           ...newContact,
-                          socialMedia: { ...newContact.socialMedia, linkedin: e.target.value },
+                          tags: e.target.value
+                            .split(",")
+                            .map((tag) => tag.trim())
+                            .filter((tag) => tag),
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="VIP, Enterprise, Hot Lead"
                     />
                   </div>
                 </div>
@@ -709,7 +1060,8 @@ const ContactsPage = () => {
                 </button>
                 <button
                   onClick={handleAddContact}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={!newContact.name || !newContact.email}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add Contact
                 </button>
@@ -792,6 +1144,51 @@ const ContactsPage = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                      <select
+                        value={editingContact.category || ""}
+                        onChange={(e) => setEditingContact({ ...editingContact, category: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="lead">Lead</option>
+                        <option value="prospect">Prospect</option>
+                        <option value="client">Client</option>
+                        <option value="partner">Partner</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Deal Value</label>
+                      <input
+                        type="number"
+                        value={editingContact.dealValue || 0}
+                        onChange={(e) =>
+                          setEditingContact({ ...editingContact, dealValue: Number.parseInt(e.target.value) || 0 })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                    <input
+                      type="text"
+                      value={editingContact.tags?.join(", ") || ""}
+                      onChange={(e) =>
+                        setEditingContact({
+                          ...editingContact,
+                          tags: e.target.value
+                            .split(",")
+                            .map((tag) => tag.trim())
+                            .filter((tag) => tag),
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="VIP, Enterprise, Hot Lead"
+                    />
                   </div>
 
                   <div>
@@ -826,15 +1223,24 @@ const ContactsPage = () => {
 
                   {/* Quick Actions */}
                   <div className="space-y-2">
-                    <button className="w-full flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">
+                    <button
+                      onClick={() => handleCall(selectedContact)}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                    >
                       <Phone className="w-4 h-4" />
                       Call
                     </button>
-                    <button className="w-full flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200">
+                    <button
+                      onClick={() => handleEmail(selectedContact)}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                    >
                       <Mail className="w-4 h-4" />
                       Email
                     </button>
-                    <button className="w-full flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200">
+                    <button
+                      onClick={() => handleScheduleMeeting(selectedContact)}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200"
+                    >
                       <Calendar className="w-4 h-4" />
                       Schedule Meeting
                     </button>

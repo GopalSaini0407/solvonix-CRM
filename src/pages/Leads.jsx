@@ -168,6 +168,16 @@ export default function LeadsPage() {
   const [activeTab, setActiveTab] = useState("cards")
   const [dropdownOpen, setDropdownOpen] = useState({})
 
+  const [showFilters, setShowFilters] = useState(false)
+  const [filters, setFilters] = useState({
+    stage: "all",
+    source: "all",
+    assignee: "all",
+    valueRange: "all",
+    dateRange: "all",
+    company: "",
+  })
+
   const dragCounter = useRef(0)
 
   // Get all leads for table view and analytics
@@ -175,32 +185,126 @@ export default function LeadsPage() {
     stage.leads.map((lead) => ({ ...lead, stage: stage.name, stageId: stage.id })),
   )
 
-  // Filter leads based on search term
-  const filteredLeads = allLeads.filter(
-    (lead) =>
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // Enhanced filtering function
+  const getFilteredLeads = () => {
+    return allLeads.filter((lead) => {
+      // Search term filter
+      const matchesSearch =
+        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.email.toLowerCase().includes(searchTerm.toLowerCase())
 
-  // Analytics data
-  const leadsBySource = [
-    { name: "Website", value: allLeads.filter((lead) => lead.source === "Website").length, fill: "#3B82F6" },
-    { name: "Referral", value: allLeads.filter((lead) => lead.source === "Referral").length, fill: "#10B981" },
-    { name: "Cold Call", value: allLeads.filter((lead) => lead.source === "Cold Call").length, fill: "#F59E0B" },
-    { name: "LinkedIn", value: allLeads.filter((lead) => lead.source === "LinkedIn").length, fill: "#8B5CF6" },
-    { name: "Trade Show", value: allLeads.filter((lead) => lead.source === "Trade Show").length, fill: "#EF4444" },
-  ].filter((item) => item.value > 0)
+      // Stage filter
+      const matchesStage = filters.stage === "all" || lead.stageId === filters.stage
 
-  const leadsByStage = stages.map((stage, index) => {
-    const colors = ["#3B82F6", "#F59E0B", "#F97316", "#8B5CF6", "#10B981", "#EF4444"]
-    return {
-      name: stage.name,
-      count: stage.leads.length,
-      value: stage.leads.reduce((sum, lead) => sum + lead.value, 0),
-      fill: colors[index] || "#6B7280",
+      // Source filter
+      const matchesSource = filters.source === "all" || lead.source === filters.source
+
+      // Assignee filter
+      const matchesAssignee =
+        filters.assignee === "all" ||
+        (filters.assignee === "" ? !lead.assignedTo : lead.assignedTo === filters.assignee)
+
+      // Value range filter
+      let matchesValue = true
+      if (filters.valueRange !== "all") {
+        switch (filters.valueRange) {
+          case "high":
+            matchesValue = lead.value >= 100000
+            break
+          case "medium":
+            matchesValue = lead.value >= 50000 && lead.value < 100000
+            break
+          case "low":
+            matchesValue = lead.value < 50000
+            break
+        }
+      }
+
+      // Date range filter
+      let matchesDate = true
+      if (filters.dateRange !== "all") {
+        const leadDate = new Date(lead.createdAt)
+        const now = new Date()
+        const daysDiff = Math.floor((now - leadDate) / (1000 * 60 * 60 * 24))
+
+        switch (filters.dateRange) {
+          case "today":
+            matchesDate = daysDiff === 0
+            break
+          case "week":
+            matchesDate = daysDiff <= 7
+            break
+          case "month":
+            matchesDate = daysDiff <= 30
+            break
+          case "quarter":
+            matchesDate = daysDiff <= 90
+            break
+        }
+      }
+
+      // Company filter
+      const matchesCompany =
+        filters.company === "" || lead.company.toLowerCase().includes(filters.company.toLowerCase())
+
+      return (
+        matchesSearch &&
+        matchesStage &&
+        matchesSource &&
+        matchesAssignee &&
+        matchesValue &&
+        matchesDate &&
+        matchesCompany
+      )
+    })
+  }
+
+  // Apply filters to stages for card view
+  const filteredStages = stages.map((stage) => ({
+    ...stage,
+    leads: stage.leads.filter((lead) => {
+      const leadWithStage = { ...lead, stageId: stage.id }
+      return getFilteredLeads().some((filteredLead) => filteredLead.id === leadWithStage.id)
+    }),
+  }))
+
+  // Use filtered leads for table view
+  const filteredLeads = getFilteredLeads()
+
+  // Chart data calculations
+  const leadsBySource = allLeads.reduce((acc, lead) => {
+    const existing = acc.find((item) => item.name === lead.source)
+    if (existing) {
+      existing.value += 1
+    } else {
+      acc.push({
+        name: lead.source || "Unknown",
+        value: 1,
+        fill:
+          lead.source === "Website"
+            ? "#3B82F6"
+            : lead.source === "Referral"
+              ? "#10B981"
+              : lead.source === "Cold Call"
+                ? "#F59E0B"
+                : lead.source === "LinkedIn"
+                  ? "#8B5CF6"
+                  : lead.source === "Trade Show"
+                    ? "#EF4444"
+                    : lead.source === "Email Campaign"
+                      ? "#06B6D4"
+                      : "#6B7280",
+      })
     }
-  })
+    return acc
+  }, [])
+
+  const leadsByStage = stages.map((stage) => ({
+    name: stage.name,
+    count: stage.leads.length,
+    value: stage.leads.reduce((total, lead) => total + lead.value, 0),
+  }))
 
   const monthlyData = [
     { month: "Jan", leads: 12, converted: 3 },
@@ -341,16 +445,6 @@ export default function LeadsPage() {
     }))
   }
 
-  const filteredStages = stages.map((stage) => ({
-    ...stage,
-    leads: stage.leads.filter(
-      (lead) =>
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase()),
-    ),
-  }))
-
   const totalLeads = stages.reduce((total, stage) => total + stage.leads.length, 0)
   const totalValue = stages.reduce(
     (total, stage) => total + stage.leads.reduce((stageTotal, lead) => stageTotal + lead.value, 0),
@@ -380,12 +474,16 @@ export default function LeadsPage() {
     return colors[stageId] || "bg-gray-500 text-white px-2 py-1 rounded-full text-xs font-medium"
   }
 
+  const filteredTotalLeads = getFilteredLeads().length
+  const filteredTotalValue = getFilteredLeads().reduce((total, lead) => total + lead.value, 0)
+  const filteredWonLeads = getFilteredLeads().filter((lead) => lead.stageId === "won").length
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Leads Management</h1>
               <p className="text-gray-600 mt-1">Track and manage your sales pipeline</p>
@@ -406,7 +504,7 @@ export default function LeadsPage() {
                 <User className="w-8 h-8 text-blue-600" />
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Total Leads</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalLeads}</p>
+                  <p className="text-2xl font-bold text-gray-900">{filteredTotalLeads}</p>
                 </div>
               </div>
             </div>
@@ -415,7 +513,7 @@ export default function LeadsPage() {
                 <DollarSign className="w-8 h-8 text-green-600" />
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{totalValue.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-gray-900">₹{filteredTotalValue.toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -434,7 +532,7 @@ export default function LeadsPage() {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {totalLeads > 0 ? Math.round((stages[4].leads.length / totalLeads) * 100) : 0}%
+                    {filteredTotalLeads > 0 ? Math.round((filteredWonLeads / filteredTotalLeads) * 100) : 0}%
                   </p>
                 </div>
               </div>
@@ -453,11 +551,161 @@ export default function LeadsPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-2 border rounded-lg flex items-center gap-2 transition-colors ${
+                showFilters ? "bg-blue-100 border-blue-300 text-blue-700" : "border-gray-300 hover:bg-gray-50"
+              }`}
+            >
               <Filter className="w-4 h-4" />
-              Filter
+              Filters
+              {Object.values(filters).some((value) => value !== "all" && value !== "") && (
+                <span className="bg-blue-500 text-white text-xs rounded-full w-2 h-2"></span>
+              )}
+            </button>
+            <button
+              onClick={() =>
+                setFilters({
+                  stage: "all",
+                  source: "all",
+                  assignee: "all",
+                  valueRange: "all",
+                  dateRange: "all",
+                  company: "",
+                })
+              }
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
+            >
+              Clear All
             </button>
           </div>
+
+          {/* Advanced Filters Panel */}
+          {showFilters && (
+            <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Stage</label>
+                  <select
+                    value={filters.stage}
+                    onChange={(e) => setFilters({ ...filters, stage: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Stages</option>
+                    <option value="new">New Leads</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="proposal">Proposal Sent</option>
+                    <option value="won">Won</option>
+                    <option value="lost">Lost</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Source</label>
+                  <select
+                    value={filters.source}
+                    onChange={(e) => setFilters({ ...filters, source: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Sources</option>
+                    <option value="Website">Website</option>
+                    <option value="Referral">Referral</option>
+                    <option value="Cold Call">Cold Call</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Trade Show">Trade Show</option>
+                    <option value="Email Campaign">Email Campaign</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
+                  <select
+                    value={filters.assignee}
+                    onChange={(e) => setFilters({ ...filters, assignee: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Assignees</option>
+                    <option value="Priya Singh">Priya Singh</option>
+                    <option value="Amit Kumar">Amit Kumar</option>
+                    <option value="Neha Agarwal">Neha Agarwal</option>
+                    <option value="Rohit Verma">Rohit Verma</option>
+                    <option value="Kavya Sharma">Kavya Sharma</option>
+                    <option value="">Unassigned</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Value Range</label>
+                  <select
+                    value={filters.valueRange}
+                    onChange={(e) => setFilters({ ...filters, valueRange: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Values</option>
+                    <option value="high">High (₹1L+)</option>
+                    <option value="medium">Medium (₹50K-₹1L)</option>
+                    <option value="low">Low (&lt;₹50K)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                  <select
+                    value={filters.dateRange}
+                    onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="quarter">This Quarter</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
+                  <input
+                    type="text"
+                    placeholder="Filter by company"
+                    value={filters.company}
+                    onChange={(e) => setFilters({ ...filters, company: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {getFilteredLeads().length} of {allLeads.length} leads
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() =>
+                      setFilters({
+                        stage: "all",
+                        source: "all",
+                        assignee: "all",
+                        valueRange: "all",
+                        dateRange: "all",
+                        company: "",
+                      })
+                    }
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    Reset Filters
+                  </button>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Custom Tabs */}
@@ -500,11 +748,12 @@ export default function LeadsPage() {
 
           {/* Card View (Kanban Board) */}
           {activeTab === "cards" && (
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+            <div className="overflow-x-auto">
+<div className="flex flex-nowrap gap-4">
               {filteredStages.map((stage) => (
                 <div
                   key={stage.id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]"
+                  className={`bg-white rounded-lg shadow-sm border border-gray-200 min-h-[400px] min-w-[300px]`}
                   onDragOver={handleDragOver}
                   onDragEnter={handleDragEnter}
                   onDragLeave={handleDragLeave}
@@ -570,6 +819,8 @@ export default function LeadsPage() {
                 </div>
               ))}
             </div>
+            </div>
+            
           )}
 
           {/* Table View */}

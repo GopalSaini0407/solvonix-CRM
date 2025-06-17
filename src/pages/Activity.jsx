@@ -438,7 +438,7 @@ const ActivityLogsPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Activity Logs</h1>
               <p className="text-gray-600 mt-1">Track and analyze all team activities and interactions</p>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useCallback } from "react"
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,7 +14,6 @@ import {
   Video,
   Coffee,
   X,
-  Edit,
   Trash2,
   MapPin,
   Bell,
@@ -22,6 +21,11 @@ import {
   CheckSquare,
   Building,
   Filter,
+  Search,
+  Download,
+  Copy,
+  Star,
+  CalendarDays,
 } from "lucide-react"
 
 const CalendarPage = () => {
@@ -32,15 +36,20 @@ const CalendarPage = () => {
   const [isEventDetailOpen, setIsEventDetailOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [editingEvent, setEditingEvent] = useState({})
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [draggedEvent, setDraggedEvent] = useState(null)
+  const [showFilters, setShowFilters] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState({
     tasks: true,
     meetings: true,
     calls: true,
     emails: true,
     personal: true,
+    video: true,
   })
 
-  // Sample events data
+  // Sample events data with enhanced properties
   const [events, setEvents] = useState([
     {
       id: 1,
@@ -61,6 +70,10 @@ const CalendarPage = () => {
       reminder: "15",
       recurring: false,
       notes: "Focus on implementation timeline and support structure",
+      starred: true,
+      tags: ["sales", "follow-up"],
+      createdBy: "Priya Singh",
+      createdAt: "2024-02-10T09:00:00",
     },
     {
       id: 2,
@@ -81,6 +94,10 @@ const CalendarPage = () => {
       reminder: "30",
       recurring: false,
       notes: "Prepare demo environment and case studies",
+      starred: false,
+      tags: ["demo", "sales"],
+      createdBy: "Neha Agarwal",
+      createdAt: "2024-02-12T10:30:00",
     },
     {
       id: 3,
@@ -96,7 +113,12 @@ const CalendarPage = () => {
       status: "scheduled",
       reminder: "10",
       recurring: true,
+      recurringPattern: "daily",
       notes: "Discuss daily goals and blockers",
+      starred: false,
+      tags: ["team", "standup"],
+      createdBy: "Amit Kumar",
+      createdAt: "2024-02-01T08:00:00",
     },
     {
       id: 4,
@@ -117,6 +139,11 @@ const CalendarPage = () => {
       reminder: "60",
       recurring: false,
       notes: "Include ROI projections and case studies",
+      starred: false,
+      tags: ["proposal", "marketing"],
+      createdBy: "Amit Kumar",
+      createdAt: "2024-02-12T15:00:00",
+      completedAt: "2024-02-14T17:45:00",
     },
     {
       id: 5,
@@ -137,6 +164,10 @@ const CalendarPage = () => {
       reminder: "30",
       recurring: false,
       notes: "Discuss potential referral partnerships",
+      starred: false,
+      tags: ["networking", "partnership"],
+      createdBy: "Kavya Sharma",
+      createdAt: "2024-02-15T11:00:00",
     },
     {
       id: 6,
@@ -157,6 +188,10 @@ const CalendarPage = () => {
       reminder: "60",
       recurring: false,
       notes: "Bring legal team for contract review",
+      starred: true,
+      tags: ["contract", "negotiation"],
+      createdBy: "Rohit Verma",
+      createdAt: "2024-02-16T09:00:00",
     },
     {
       id: 7,
@@ -172,7 +207,12 @@ const CalendarPage = () => {
       status: "scheduled",
       reminder: "30",
       recurring: true,
+      recurringPattern: "weekly",
       notes: "Prepare weekly sales report and pipeline updates",
+      starred: false,
+      tags: ["sales", "review"],
+      createdBy: "Priya Singh",
+      createdAt: "2024-02-01T10:00:00",
     },
     {
       id: 8,
@@ -193,6 +233,31 @@ const CalendarPage = () => {
       reminder: "15",
       recurring: false,
       notes: "Include success metrics and future roadmap",
+      starred: false,
+      tags: ["follow-up", "review"],
+      createdBy: "Rohit Verma",
+      createdAt: "2024-02-17T14:00:00",
+    },
+    {
+      id: 9,
+      title: "Video call with Remote Team",
+      description: "Monthly sync with remote development team",
+      type: "video",
+      startTime: "2024-02-20T13:00:00",
+      endTime: "2024-02-20T14:00:00",
+      attendees: ["Neha Agarwal", "Amit Kumar"],
+      location: "Zoom Meeting",
+      relatedTo: null,
+      priority: "medium",
+      status: "scheduled",
+      reminder: "15",
+      recurring: true,
+      recurringPattern: "monthly",
+      notes: "Discuss project progress and roadmap",
+      starred: false,
+      tags: ["team", "remote"],
+      createdBy: "Neha Agarwal",
+      createdAt: "2024-02-18T16:00:00",
     },
   ])
 
@@ -208,35 +273,78 @@ const CalendarPage = () => {
     priority: "medium",
     reminder: "15",
     recurring: false,
+    recurringPattern: "daily",
     notes: "",
+    tags: [],
   })
 
   const teamMembers = [
-    { id: 1, name: "Priya Singh", avatar: "PS", color: "bg-blue-500" },
-    { id: 2, name: "Amit Kumar", avatar: "AK", color: "bg-green-500" },
-    { id: 3, name: "Neha Agarwal", avatar: "NA", color: "bg-purple-500" },
-    { id: 4, name: "Rohit Verma", avatar: "RV", color: "bg-orange-500" },
-    { id: 5, name: "Kavya Sharma", avatar: "KS", color: "bg-pink-500" },
+    { id: 1, name: "Priya Singh", avatar: "PS", color: "bg-blue-500", email: "priya@company.com" },
+    { id: 2, name: "Amit Kumar", avatar: "AK", color: "bg-green-500", email: "amit@company.com" },
+    { id: 3, name: "Neha Agarwal", avatar: "NA", color: "bg-purple-500", email: "neha@company.com" },
+    { id: 4, name: "Rohit Verma", avatar: "RV", color: "bg-orange-500", email: "rohit@company.com" },
+    { id: 5, name: "Kavya Sharma", avatar: "KS", color: "bg-pink-500", email: "kavya@company.com" },
   ]
 
-  // Filter events based on selected filters
-  const filteredEvents = events.filter((event) => selectedFilters[event.type])
+  // Enhanced filtering with search
+  const filteredEvents = useMemo(() => {
+    return events.filter((event) => {
+      const matchesFilter = selectedFilters[event.type]
+      const matchesSearch =
+        searchTerm === "" ||
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.relatedTo?.name && event.relatedTo.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (event.relatedTo?.company && event.relatedTo.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        event.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+
+      return matchesFilter && matchesSearch
+    })
+  }, [events, selectedFilters, searchTerm])
 
   // Get events for a specific date
-  const getEventsForDate = (date) => {
-    const dateStr = date.toISOString().split("T")[0]
-    return filteredEvents.filter((event) => event.startTime.startsWith(dateStr))
-  }
+  const getEventsForDate = useCallback(
+    (date) => {
+      const dateStr = date.toISOString().split("T")[0]
+      return filteredEvents.filter((event) => event.startTime.startsWith(dateStr))
+    },
+    [filteredEvents],
+  )
 
   // Get events for a specific time slot
-  const getEventsForTimeSlot = (date, hour) => {
-    const dateStr = date.toISOString().split("T")[0]
-    return filteredEvents.filter((event) => {
-      const eventDate = event.startTime.split("T")[0]
-      const eventHour = Number.parseInt(event.startTime.split("T")[1].split(":")[0])
-      return eventDate === dateStr && eventHour === hour
-    })
-  }
+  const getEventsForTimeSlot = useCallback(
+    (date, hour) => {
+      const dateStr = date.toISOString().split("T")[0]
+      return filteredEvents.filter((event) => {
+        const eventDate = event.startTime.split("T")[0]
+        const eventHour = Number.parseInt(event.startTime.split("T")[1].split(":")[0])
+        return eventDate === dateStr && eventHour === hour
+      })
+    },
+    [filteredEvents],
+  )
+
+  // Check for event conflicts
+  const hasConflict = useCallback(
+    (newEvent, excludeId = null) => {
+      const newStart = new Date(newEvent.startTime)
+      const newEnd = new Date(newEvent.endTime)
+
+      return events.some((event) => {
+        if (event.id === excludeId) return false
+
+        const eventStart = new Date(event.startTime)
+        const eventEnd = new Date(event.endTime)
+
+        return (
+          newStart < eventEnd &&
+          newEnd > eventStart &&
+          event.attendees.some((attendee) => newEvent.attendees.includes(attendee))
+        )
+      })
+    },
+    [events],
+  )
 
   // Calendar navigation
   const prevPeriod = () => {
@@ -310,11 +418,25 @@ const CalendarPage = () => {
     setIsEventDetailOpen(true)
   }
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
+    if (!newEvent.title) return
+
+    setIsLoading(true)
+
+    // Check for conflicts
+    if (hasConflict(newEvent)) {
+      alert("This event conflicts with existing events for the selected attendees.")
+      setIsLoading(false)
+      return
+    }
+
     const event = {
       id: Date.now(),
       ...newEvent,
       status: "scheduled",
+      starred: false,
+      createdBy: "Current User",
+      createdAt: new Date().toISOString(),
     }
 
     setEvents([...events, event])
@@ -330,19 +452,95 @@ const CalendarPage = () => {
       priority: "medium",
       reminder: "15",
       recurring: false,
+      recurringPattern: "daily",
       notes: "",
+      tags: [],
     })
     setIsEventModalOpen(false)
+    setIsLoading(false)
   }
 
-  const handleSaveEvent = () => {
+  const handleSaveEvent = async () => {
+    setIsLoading(true)
+
+    // Check for conflicts (excluding current event)
+    if (hasConflict(editingEvent, editingEvent.id)) {
+      alert("This event conflicts with existing events for the selected attendees.")
+      setIsLoading(false)
+      return
+    }
+
     setEvents(events.map((event) => (event.id === editingEvent.id ? editingEvent : event)))
     setIsEventDetailOpen(false)
+    setIsLoading(false)
   }
 
   const handleDeleteEvent = (eventId) => {
     setEvents(events.filter((event) => event.id !== eventId))
     setIsEventDetailOpen(false)
+  }
+
+  const handleDuplicateEvent = (event) => {
+    const duplicatedEvent = {
+      ...event,
+      id: Date.now(),
+      title: `${event.title} (Copy)`,
+      startTime: new Date(new Date(event.startTime).getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      endTime: new Date(new Date(event.endTime).getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date().toISOString(),
+    }
+    setEvents([...events, duplicatedEvent])
+  }
+
+  const handleStarEvent = (eventId) => {
+    setEvents(events.map((event) => (event.id === eventId ? { ...event, starred: !event.starred } : event)))
+  }
+
+  const exportCalendar = () => {
+    const dataStr = JSON.stringify(filteredEvents, null, 2)
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
+
+    const exportFileDefaultName = `calendar-export-${new Date().toISOString().split("T")[0]}.json`
+
+    const linkElement = document.createElement("a")
+    linkElement.setAttribute("href", dataUri)
+    linkElement.setAttribute("download", exportFileDefaultName)
+    linkElement.click()
+  }
+
+  // Drag and drop handlers
+  const handleDragStart = (e, event) => {
+    setDraggedEvent(event)
+    e.dataTransfer.effectAllowed = "move"
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+  }
+
+  const handleDrop = (e, targetDate, targetHour = null) => {
+    e.preventDefault()
+
+    if (!draggedEvent) return
+
+    const newStartTime = new Date(targetDate)
+    if (targetHour !== null) {
+      newStartTime.setHours(targetHour, 0, 0, 0)
+    }
+
+    const duration = new Date(draggedEvent.endTime) - new Date(draggedEvent.startTime)
+    const newEndTime = new Date(newStartTime.getTime() + duration)
+
+    const updatedEvent = {
+      ...draggedEvent,
+      startTime: newStartTime.toISOString(),
+      endTime: newEndTime.toISOString(),
+    }
+
+    setEvents(events.map((event) => (event.id === draggedEvent.id ? updatedEvent : event)))
+
+    setDraggedEvent(null)
   }
 
   const getEventTypeIcon = (type) => {
@@ -412,17 +610,31 @@ const CalendarPage = () => {
   const weekDays = generateWeekDays()
   const timeSlots = generateTimeSlots()
 
+  // Calculate statistics
+  const todayEvents = getEventsForDate(new Date())
+  const upcomingEvents = events.filter(
+    (event) => new Date(event.startTime) > new Date() && event.status === "scheduled",
+  ).length
+  const completedEvents = events.filter((event) => event.status === "completed").length
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
               <p className="text-gray-600 mt-1">Manage your schedule and activities</p>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={exportCalendar}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export
+              </button>
               <button
                 onClick={() => setIsEventModalOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
@@ -433,8 +645,73 @@ const CalendarPage = () => {
             </div>
           </div>
 
-          {/* Calendar Controls */}
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center">
+                <CalendarDays className="w-8 h-8 text-blue-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-600">Today's Events</p>
+                  <p className="text-2xl font-bold text-gray-900">{todayEvents.length}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center">
+                <Clock className="w-8 h-8 text-orange-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-600">Upcoming</p>
+                  <p className="text-2xl font-bold text-gray-900">{upcomingEvents}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center">
+                <CheckSquare className="w-8 h-8 text-green-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-600">Completed</p>
+                  <p className="text-2xl font-bold text-gray-900">{completedEvents}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center">
+                <Star className="w-8 h-8 text-yellow-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-600">Starred</p>
+                  <p className="text-2xl font-bold text-gray-900">{events.filter((event) => event.starred).length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Filters */}
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search events..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                  showFilters
+                    ? "bg-blue-100 border-blue-300 text-blue-700"
+                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+              </button>
+            </div>
+
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <button
@@ -461,29 +738,6 @@ const CalendarPage = () => {
                   `${weekDays[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${weekDays[6].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`}
                 {viewMode === "day" && formatDate(currentDate)}
               </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Event Type Filters */}
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-500" />
-                <div className="flex items-center gap-2">
-                  {Object.entries(selectedFilters).map(([type, enabled]) => (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedFilters({ ...selectedFilters, [type]: !enabled })}
-                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                        enabled
-                          ? `${getEventTypeColor(type)} text-white`
-                          : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                      }`}
-                    >
-                      {getEventTypeIcon(type)}
-                      <span className="capitalize">{type}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* View Mode Toggle */}
               <div className="flex items-center border border-gray-300 rounded-lg">
@@ -509,6 +763,27 @@ const CalendarPage = () => {
             </div>
           </div>
 
+          {/* Expandable Filters */}
+          {showFilters && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+              <h4 className="font-medium text-gray-900 mb-3">Event Type Filters</h4>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(selectedFilters).map(([type, enabled]) => (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedFilters({ ...selectedFilters, [type]: !enabled })}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      enabled ? `${getEventTypeColor(type)} text-white` : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {getEventTypeIcon(type)}
+                    <span className="capitalize">{type}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Month View */}
           {viewMode === "month" && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -530,6 +805,8 @@ const CalendarPage = () => {
                     className={`min-h-[120px] border-r border-b border-gray-200 last:border-r-0 p-2 ${
                       !isCurrentMonth(day) ? "bg-gray-50" : ""
                     } ${isToday(day) ? "bg-blue-50" : ""}`}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, day)}
                   >
                     <div
                       className={`text-sm mb-2 ${!isCurrentMonth(day) ? "text-gray-400" : "text-gray-900"} ${isToday(day) ? "font-bold text-blue-600" : ""}`}
@@ -543,11 +820,14 @@ const CalendarPage = () => {
                           <div
                             key={event.id}
                             onClick={() => handleEventClick(event)}
-                            className={`text-xs p-1 rounded cursor-pointer ${getEventTypeColor(event.type)} text-white truncate hover:opacity-80`}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, event)}
+                            className={`text-xs p-1 rounded cursor-pointer ${getEventTypeColor(event.type)} text-white truncate hover:opacity-80 ${getPriorityColor(event.priority)} border-l-2 relative`}
                           >
                             <div className="flex items-center gap-1">
                               {getEventTypeIcon(event.type)}
                               <span>{formatTime(event.startTime)}</span>
+                              {event.starred && <Star className="w-3 h-3 fill-current" />}
                             </div>
                             <div className="truncate">{event.title}</div>
                           </div>
@@ -589,16 +869,24 @@ const CalendarPage = () => {
                       {hour === 0 ? "12 AM" : hour < 12 ? `${hour} AM` : hour === 12 ? "12 PM" : `${hour - 12} PM`}
                     </div>
                     {weekDays.map((day, dayIndex) => (
-                      <div key={dayIndex} className="min-h-[60px] border-r border-gray-200 last:border-r-0 p-1">
+                      <div
+                        key={dayIndex}
+                        className="min-h-[60px] border-r border-gray-200 last:border-r-0 p-1"
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, day, hour)}
+                      >
                         {getEventsForTimeSlot(day, hour).map((event) => (
                           <div
                             key={event.id}
                             onClick={() => handleEventClick(event)}
-                            className={`text-xs p-2 rounded mb-1 cursor-pointer ${getEventTypeColor(event.type)} text-white hover:opacity-80 ${getPriorityColor(event.priority)} border-l-4`}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, event)}
+                            className={`text-xs p-2 rounded mb-1 cursor-pointer ${getEventTypeColor(event.type)} text-white hover:opacity-80 ${getPriorityColor(event.priority)} border-l-4 relative`}
                           >
                             <div className="flex items-center gap-1 mb-1">
                               {getEventTypeIcon(event.type)}
                               <span className="font-medium">{formatTime(event.startTime)}</span>
+                              {event.starred && <Star className="w-3 h-3 fill-current ml-auto" />}
                             </div>
                             <div className="truncate">{event.title}</div>
                           </div>
@@ -624,17 +912,24 @@ const CalendarPage = () => {
                     <div className="w-20 p-4 border-r border-gray-200 text-sm text-gray-500 text-right">
                       {hour === 0 ? "12 AM" : hour < 12 ? `${hour} AM` : hour === 12 ? "12 PM" : `${hour - 12} PM`}
                     </div>
-                    <div className="flex-1 min-h-[80px] p-2">
+                    <div
+                      className="flex-1 min-h-[80px] p-2"
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, currentDate, hour)}
+                    >
                       {getEventsForTimeSlot(currentDate, hour).map((event) => (
                         <div
                           key={event.id}
                           onClick={() => handleEventClick(event)}
-                          className={`p-3 rounded-lg mb-2 cursor-pointer ${getEventTypeColor(event.type)} text-white hover:opacity-80 ${getPriorityColor(event.priority)} border-l-4`}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, event)}
+                          className={`p-3 rounded-lg mb-2 cursor-pointer ${getEventTypeColor(event.type)} text-white hover:opacity-80 ${getPriorityColor(event.priority)} border-l-4 relative`}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               {getEventTypeIcon(event.type)}
                               <span className="font-medium">{event.title}</span>
+                              {event.starred && <Star className="w-4 h-4 fill-current" />}
                             </div>
                             <span className="text-xs opacity-90">
                               {formatTime(event.startTime)} - {formatTime(event.endTime)}
@@ -653,6 +948,15 @@ const CalendarPage = () => {
                               <span>{event.attendees.join(", ")}</span>
                             </div>
                           )}
+                          {event.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {event.tags.map((tag, index) => (
+                                <span key={index} className="text-xs bg-white bg-opacity-20 px-1 rounded">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -666,7 +970,7 @@ const CalendarPage = () => {
         {/* Add Event Modal */}
         {isEventModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Add New Event</h2>
                 <button onClick={() => setIsEventModalOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -683,6 +987,7 @@ const CalendarPage = () => {
                       value={newEvent.title}
                       onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter event title"
                     />
                   </div>
 
@@ -693,58 +998,39 @@ const CalendarPage = () => {
                       onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter event description"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                    <select
-                      value={newEvent.type}
-                      onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="meeting">Meeting</option>
-                      <option value="call">Call</option>
-                      <option value="email">Email</option>
-                      <option value="task">Task</option>
-                      <option value="personal">Personal</option>
-                      <option value="video">Video Call</option>
-                    </select>
-                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                      <select
+                        value={newEvent.type}
+                        onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="meeting">Meeting</option>
+                        <option value="call">Call</option>
+                        <option value="email">Email</option>
+                        <option value="task">Task</option>
+                        <option value="personal">Personal</option>
+                        <option value="video">Video Call</option>
+                      </select>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                    <select
-                      value={newEvent.priority}
-                      onChange={(e) => setNewEvent({ ...newEvent, priority: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                    <input
-                      type="datetime-local"
-                      value={newEvent.startTime}
-                      onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                    <input
-                      type="datetime-local"
-                      value={newEvent.endTime}
-                      onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                      <select
+                        value={newEvent.priority}
+                        onChange={(e) => setNewEvent({ ...newEvent, priority: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div>
@@ -756,6 +1042,30 @@ const CalendarPage = () => {
                       placeholder="Meeting room, address, or online"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                      <input
+                        type="datetime-local"
+                        value={newEvent.startTime}
+                        onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                      <input
+                        type="datetime-local"
+                        value={newEvent.endTime}
+                        onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -773,36 +1083,74 @@ const CalendarPage = () => {
                       <option value="1440">1 day before</option>
                     </select>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Attendees</label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {teamMembers.map((member) => (
+                        <label key={member.id} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={newEvent.attendees.includes(member.name)}
+                            onChange={(e) => {
+                              const attendees = e.target.checked
+                                ? [...newEvent.attendees, member.name]
+                                : newEvent.attendees.filter((name) => name !== member.name)
+                              setNewEvent({ ...newEvent, attendees })
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs ${member.color}`}
+                          >
+                            {member.avatar}
+                          </div>
+                          <span className="text-sm">{member.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={newEvent.recurring}
+                        onChange={(e) => setNewEvent({ ...newEvent, recurring: e.target.checked })}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm text-gray-700">Recurring event</span>
+                    </label>
+
+                    {newEvent.recurring && (
+                      <select
+                        value={newEvent.recurringPattern}
+                        onChange={(e) => setNewEvent({ ...newEvent, recurringPattern: e.target.value })}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Attendees</label>
-                <div className="flex flex-wrap gap-2">
-                  {teamMembers.map((member) => (
-                    <button
-                      key={member.id}
-                      onClick={() => {
-                        const attendees = newEvent.attendees.includes(member.name)
-                          ? newEvent.attendees.filter((name) => name !== member.name)
-                          : [...newEvent.attendees, member.name]
-                        setNewEvent({ ...newEvent, attendees })
-                      }}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
-                        newEvent.attendees.includes(member.name)
-                          ? "bg-blue-100 border-blue-300 text-blue-700"
-                          : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs ${member.color}`}
-                      >
-                        {member.avatar}
-                      </div>
-                      <span className="text-sm">{member.name}</span>
-                    </button>
-                  ))}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <input
+                  type="text"
+                  placeholder="Enter tags separated by commas"
+                  onChange={(e) => {
+                    const tags = e.target.value
+                      .split(",")
+                      .map((tag) => tag.trim())
+                      .filter((tag) => tag)
+                    setNewEvent({ ...newEvent, tags })
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
 
               <div className="mt-6">
@@ -812,32 +1160,26 @@ const CalendarPage = () => {
                   onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Additional notes or agenda items"
                 />
-              </div>
-
-              <div className="flex items-center gap-4 mt-6">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={newEvent.recurring}
-                    onChange={(e) => setNewEvent({ ...newEvent, recurring: e.target.checked })}
-                    className="rounded border-gray-300"
-                  />
-                  <span className="text-sm text-gray-700">Recurring event</span>
-                </div>
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setIsEventModalOpen(false)}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  disabled={isLoading}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddEvent}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={!newEvent.title || isLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
+                  {isLoading && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
                   Add Event
                 </button>
               </div>
@@ -850,10 +1192,27 @@ const CalendarPage = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Event Details</h2>
-                <button onClick={() => setIsEventDetailOpen(false)} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-semibold">Event Details</h2>
+                  <button
+                    onClick={() => handleStarEvent(selectedEvent.id)}
+                    className={`p-1 rounded ${selectedEvent.starred ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"}`}
+                  >
+                    <Star className={`w-5 h-5 ${selectedEvent.starred ? "fill-current" : ""}`} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleDuplicateEvent(selectedEvent)}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                    title="Duplicate Event"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setIsEventDetailOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -941,6 +1300,33 @@ const CalendarPage = () => {
                   </div>
 
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Attendees</label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {teamMembers.map((member) => (
+                        <label key={member.id} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={editingEvent.attendees?.includes(member.name) || false}
+                            onChange={(e) => {
+                              const attendees = e.target.checked
+                                ? [...(editingEvent.attendees || []), member.name]
+                                : (editingEvent.attendees || []).filter((name) => name !== member.name)
+                              setEditingEvent({ ...editingEvent, attendees })
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs ${member.color}`}
+                          >
+                            {member.avatar}
+                          </div>
+                          <span className="text-sm">{member.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                     <textarea
                       value={editingEvent.notes || ""}
@@ -956,7 +1342,7 @@ const CalendarPage = () => {
                   {/* Event Summary */}
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-3">Event Summary</h4>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <div className={`p-2 rounded-lg ${getEventTypeColor(selectedEvent.type)} text-white`}>
                           {getEventTypeIcon(selectedEvent.type)}
@@ -984,16 +1370,34 @@ const CalendarPage = () => {
                       {selectedEvent.recurring && (
                         <div className="flex items-center gap-2 text-gray-600">
                           <Repeat className="w-4 h-4" />
-                          <span>Recurring event</span>
+                          <span>Recurring {selectedEvent.recurringPattern}</span>
                         </div>
                       )}
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <User className="w-4 h-4" />
+                        <span>Created by {selectedEvent.createdBy}</span>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Tags */}
+                  {selectedEvent.tags && selectedEvent.tags.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Tags</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedEvent.tags.map((tag, index) => (
+                          <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Attendees */}
                   {selectedEvent.attendees.length > 0 && (
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Attendees</h4>
+                      <h4 className="font-medium text-gray-900 mb-3">Attendees ({selectedEvent.attendees.length})</h4>
                       <div className="space-y-2">
                         {selectedEvent.attendees.map((attendee, index) => {
                           const member = teamMembers.find((m) => m.name === attendee)
@@ -1004,7 +1408,10 @@ const CalendarPage = () => {
                               >
                                 {member?.avatar || attendee.charAt(0)}
                               </div>
-                              <span className="text-sm text-gray-900">{attendee}</span>
+                              <div>
+                                <span className="text-sm text-gray-900">{attendee}</span>
+                                {member?.email && <div className="text-xs text-gray-500">{member.email}</div>}
+                              </div>
                             </div>
                           )
                         })}
@@ -1043,13 +1450,27 @@ const CalendarPage = () => {
 
                   {/* Quick Actions */}
                   <div className="space-y-2">
-                    <button className="w-full flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">
-                      <Edit className="w-4 h-4" />
-                      Edit Event
+                    <button
+                      onClick={() => handleStarEvent(selectedEvent.id)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg ${
+                        selectedEvent.starred
+                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      <Star className={`w-4 h-4 ${selectedEvent.starred ? "fill-current" : ""}`} />
+                      {selectedEvent.starred ? "Unstar Event" : "Star Event"}
                     </button>
-                    <button className="w-full flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200">
+                    <button className="w-full flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">
                       <Bell className="w-4 h-4" />
                       Set Reminder
+                    </button>
+                    <button
+                      onClick={() => handleDuplicateEvent(selectedEvent)}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Duplicate Event
                     </button>
                     <button className="w-full flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200">
                       <Users className="w-4 h-4" />
@@ -1073,13 +1494,18 @@ const CalendarPage = () => {
                   <button
                     onClick={() => setIsEventDetailOpen(false)}
                     className="bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg"
+                    disabled={isLoading}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveEvent}
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+                    disabled={isLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center gap-2 disabled:opacity-50"
                   >
+                    {isLoading && (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    )}
                     Save Changes
                   </button>
                 </div>

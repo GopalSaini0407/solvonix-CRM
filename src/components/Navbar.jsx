@@ -2,10 +2,11 @@ import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon, ChevronDownIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 import { Fragment, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import TenantSelector from './TenantSelector' // You'll need to create this component
+// import TenantSelector from './TenantSelector' // You'll need to create this component
+import ThemeSelector from '../contextAPI/contextTheme/ThemeSelector'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', current: false },
+  { name: 'Dashboard', href: '/', current: false },
   { name: 'Leads', href: '/leads', current: false },
   { name: 'Accounts', href: '/accounts', current: false },
   { name: 'Contacts', href: '/contacts', current: false },
@@ -32,6 +33,8 @@ const navigation = [
     ],
     icon: <ChevronDownIcon className="h-4 w-4 text-white" />
   },
+  { name: 'Settings', href: '/settings', current: false },
+
 ]
 
 function classNames(...classes) {
@@ -138,7 +141,7 @@ export default function Navbar() {
               <div className="hidden md:block">
                 <div className="ml-4 flex items-center md:ml-6">
                   {/* Tenant selector */}
-                  <TenantSelector />
+                  {/* <TenantSelector /> */}
                   
                   {/* Notifications */}
                   <button
@@ -234,7 +237,11 @@ export default function Navbar() {
                       </Menu.Items>
                     </Transition>
                   </Menu>
+                  {/* theme selctior button */}
+                  <ThemeSelector/>
+
                 </div>
+
               </div>
 
               {/* Mobile menu button */}
@@ -250,6 +257,7 @@ export default function Navbar() {
                 </Disclosure.Button>
               </div>
             </div>
+
           </div>
 
           {/* Mobile menu */}

@@ -2,6 +2,7 @@ import React from 'react'
 import Breadcrumbs from './Breadcrumbs';
 import {FunnelIcon} from '@heroicons/react/20/solid'
 import DateRangePicker from './DateRangePicker';
+import ThemeSelector from '../contextAPI/contextTheme/ThemeSelector'
 function Header() {
 const breadcrumbItems = [
 { label: 'Home', href: '/' },
