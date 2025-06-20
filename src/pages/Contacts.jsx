@@ -532,7 +532,7 @@ const ContactsPage = () => {
 
           {/* Filters and Search */}
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -647,9 +647,9 @@ const ContactsPage = () => {
           )}
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-col sm:flex-row sm:items-start items-center">
           {/* Sidebar Categories */}
-          <div className="w-64 bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-fit">
+          <div className="sm:w-64 bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-fit w-[100%]">
             <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
             <div className="space-y-2">
               {categories.map((category) => (
@@ -668,7 +668,7 @@ const ContactsPage = () => {
           </div>
 
           {/* Contacts Grid/List */}
-          <div className="flex-1">
+          <div className="sm:flex-1 w-[100%]">
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredContacts.map((contact) => (

@@ -1,8 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Eye, EyeOff, Building, User, Mail, Lock, Phone } from "lucide-react"
 
 export default function RegisterPage({ onRegister, onSwitchToLogin }) {
@@ -105,20 +103,22 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="p-6 text-center">
+          <h2 className="text-2xl font-bold text-gray-900">
             {step === 1 ? "Create Account" : "Company Information"}
-          </CardTitle>
-          <p className="text-gray-600">{step === 1 ? "Sign up for your CRM account" : "Tell us about your company"}</p>
+          </h2>
+          <p className="text-gray-600 mt-1">
+            {step === 1 ? "Sign up for your CRM account" : "Tell us about your company"}
+          </p>
           <div className="flex justify-center mt-4">
             <div className="flex space-x-2">
               <div className={`w-3 h-3 rounded-full ${step >= 1 ? "bg-blue-600" : "bg-gray-300"}`}></div>
               <div className={`w-3 h-3 rounded-full ${step >= 2 ? "bg-blue-600" : "bg-gray-300"}`}></div>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="px-6 pb-6">
           <form
             onSubmit={
               step === 1
@@ -267,9 +267,12 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
                   {errors.confirmPassword && <p className="text-red-600 text-xs mt-1">{errors.confirmPassword}</p>}
                 </div>
 
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition duration-150 ease-in-out"
+                >
                   Next Step
-                </Button>
+                </button>
               </>
             ) : (
               <>
@@ -343,7 +346,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
                     id="agreeToTerms"
                     checked={formData.agreeToTerms}
                     onChange={(e) => handleInputChange("agreeToTerms", e.target.checked)}
-                    className="mt-1"
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="agreeToTerms" className="text-sm text-gray-600">
                     I agree to the{" "}
@@ -359,12 +362,22 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
                 {errors.agreeToTerms && <p className="text-red-600 text-xs">{errors.agreeToTerms}</p>}
 
                 <div className="flex space-x-4">
-                  <Button type="button" variant="outline" onClick={() => setStep(1)} className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
                     Back
-                  </Button>
-                  <Button type="submit" disabled={isLoading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      isLoading ? "opacity-70 cursor-not-allowed" : ""
+                    }`}
+                  >
                     {isLoading ? "Creating Account..." : "Create Account"}
-                  </Button>
+                  </button>
                 </div>
               </>
             )}
@@ -373,13 +386,16 @@ export default function RegisterPage({ onRegister, onSwitchToLogin }) {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{" "}
-              <button onClick={onSwitchToLogin} className="text-blue-600 hover:underline font-medium">
+              <button
+                onClick={onSwitchToLogin}
+                className="text-blue-600 hover:underline font-medium"
+              >
                 Sign in here
               </button>
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

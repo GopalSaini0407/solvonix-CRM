@@ -18,11 +18,20 @@ import {
   Plus,
   Trash2,
   X,
+  Edit3,
+  Check,
+  ChevronUp,
+  ChevronDown,
+  GripVertical,
 } from "lucide-react"
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general")
   const [isSaving, setIsSaving] = useState(false)
+  const [editingStageId, setEditingStageId] = useState(null)
+  const [showAddStageAt, setShowAddStageAt] = useState(null)
+  const [showAddLeadForm, setShowAddLeadForm] = useState(null)
+  const [selectedSourceForLead, setSelectedSourceForLead] = useState("")
 
   // Sample settings state
   const [settings, setSettings] = useState({
@@ -65,18 +74,30 @@ export default function SettingsPage() {
     taxId: "",
     businessType: "corporation",
     pipelineStages: [
-      { id: "new", name: "New Lead", color: "bg-blue-500" },
-      { id: "contacted", name: "Contacted", color: "bg-green-500" },
-      { id: "qualified", name: "Qualified", color: "bg-yellow-500" },
-      { id: "proposal", name: "Proposal Sent", color: "bg-purple-500" },
+      { id: "new", name: "New Lead", color: "bg-blue-500", order: 1 },
+      { id: "contacted", name: "Contacted", color: "bg-green-500", order: 2 },
+      { id: "qualified", name: "Qualified", color: "bg-yellow-500", order: 3 },
+      { id: "proposal", name: "Proposal Sent", color: "bg-purple-500", order: 4 },
     ],
     leadSources: ["Website", "Referral", "Social Media", "Advertisement"],
     leadStatuses: ["Open", "Contacted", "Qualified", "Closed"],
   })
 
   const [newStage, setNewStage] = useState({ id: "", name: "", color: "bg-gray-500" })
+  const [editingStage, setEditingStage] = useState({ id: "", name: "", color: "bg-gray-500" })
+  const [newStageAtPosition, setNewStageAtPosition] = useState({ id: "", name: "", color: "bg-gray-500", position: 0 })
   const [newSource, setNewSource] = useState("")
   const [newStatus, setNewStatus] = useState("")
+  const [newLead, setNewLead] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    source: "",
+    status: "Open",
+    address: "",
+    notes: "",
+  })
 
   const availableColors = [
     { name: "Blue", value: "bg-blue-500" },
@@ -169,10 +190,10 @@ export default function SettingsPage() {
         taxId: "",
         businessType: "corporation",
         pipelineStages: [
-          { id: "new", name: "New Lead", color: "bg-blue-500" },
-          { id: "contacted", name: "Contacted", color: "bg-green-500" },
-          { id: "qualified", name: "Qualified", color: "bg-yellow-500" },
-          { id: "proposal", name: "Proposal Sent", color: "bg-purple-500" },
+          { id: "new", name: "New Lead", color: "bg-blue-500", order: 1 },
+          { id: "contacted", name: "Contacted", color: "bg-green-500", order: 2 },
+          { id: "qualified", name: "Qualified", color: "bg-yellow-500", order: 3 },
+          { id: "proposal", name: "Proposal Sent", color: "bg-purple-500", order: 4 },
         ],
         leadSources: ["Website", "Referral", "Social Media", "Advertisement"],
         leadStatuses: ["Open", "Contacted", "Qualified", "Closed"],
@@ -184,6 +205,7 @@ export default function SettingsPage() {
     setSettings((prev) => ({ ...prev, ...newSettings }))
   }
 
+  // Pipeline Stage Functions
   const handleAddStage = () => {
     if (!newStage.id || !newStage.name) return
 
@@ -192,19 +214,108 @@ export default function SettingsPage() {
       return
     }
 
+    const newOrder = settings.pipelineStages.length + 1
     updateSettings({
-      pipelineStages: [...settings.pipelineStages, newStage],
+      pipelineStages: [...settings.pipelineStages, { ...newStage, order: newOrder }],
     })
 
     setNewStage({ id: "", name: "", color: "bg-gray-500" })
   }
 
-  const handleRemoveStage = (id) => {
+  const handleAddStageAtPosition = (position) => {
+    if (!newStageAtPosition.id || !newStageAtPosition.name) return
+
+    if (settings.pipelineStages.some((stage) => stage.id === newStageAtPosition.id)) {
+      alert("A stage with this ID already exists")
+      return
+    }
+
+    // Update orders for existing stages
+    const updatedStages = settings.pipelineStages.map((stage) => ({
+      ...stage,
+      order: stage.order >= position ? stage.order + 1 : stage.order,
+    }))
+
+    // Add new stage at the specified position
+    const newStageWithOrder = { ...newStageAtPosition, order: position }
+    updatedStages.push(newStageWithOrder)
+
+    // Sort by order
+    updatedStages.sort((a, b) => a.order - b.order)
+
     updateSettings({
-      pipelineStages: settings.pipelineStages.filter((stage) => stage.id !== id),
+      pipelineStages: updatedStages,
+    })
+
+    setNewStageAtPosition({ id: "", name: "", color: "bg-gray-500", position: 0 })
+    setShowAddStageAt(null)
+  }
+
+  const handleEditStage = (stage) => {
+    setEditingStageId(stage.id)
+    setEditingStage({ id: stage.id, name: stage.name, color: stage.color })
+  }
+
+  const handleSaveEdit = () => {
+    if (!editingStage.name) return
+
+    updateSettings({
+      pipelineStages: settings.pipelineStages.map((stage) =>
+        stage.id === editingStageId ? { ...stage, name: editingStage.name, color: editingStage.color } : stage,
+      ),
+    })
+
+    setEditingStageId(null)
+    setEditingStage({ id: "", name: "", color: "bg-gray-500" })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingStageId(null)
+    setEditingStage({ id: "", name: "", color: "bg-gray-500" })
+  }
+
+  const handleRemoveStage = (id) => {
+    const stageToRemove = settings.pipelineStages.find((stage) => stage.id === id)
+    if (!stageToRemove) return
+
+    // Update orders for remaining stages
+    const updatedStages = settings.pipelineStages
+      .filter((stage) => stage.id !== id)
+      .map((stage) => ({
+        ...stage,
+        order: stage.order > stageToRemove.order ? stage.order - 1 : stage.order,
+      }))
+
+    updateSettings({
+      pipelineStages: updatedStages,
     })
   }
 
+  const moveStage = (stageId, direction) => {
+    const currentStage = settings.pipelineStages.find((stage) => stage.id === stageId)
+    if (!currentStage) return
+
+    const newOrder = direction === "up" ? currentStage.order - 1 : currentStage.order + 1
+    const swapStage = settings.pipelineStages.find((stage) => stage.order === newOrder)
+
+    if (!swapStage) return
+
+    const updatedStages = settings.pipelineStages.map((stage) => {
+      if (stage.id === stageId) {
+        return { ...stage, order: newOrder }
+      }
+      if (stage.id === swapStage.id) {
+        return { ...stage, order: currentStage.order }
+      }
+      return stage
+    })
+
+    updateSettings({
+      pipelineStages: updatedStages,
+    })
+  }
+
+  // Lead Management Functions
   const handleAddSource = () => {
     if (!newSource) return
     updateSettings({
@@ -240,6 +351,17 @@ export default function SettingsPage() {
       ),
     })
   }
+
+  const getLeadsBySource = (source) => {
+    return settings.leads.filter((lead) => lead.source === source)
+  }
+
+  const getLeadsByStatus = (status) => {
+    return settings.leads.filter((lead) => lead.status === status)
+  }
+
+  // Sort stages by order for display
+  const sortedStages = [...settings.pipelineStages].sort((a, b) => a.order - b.order)
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -819,60 +941,309 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* Pipeline Settings */}
+            {/* Enhanced Pipeline Settings */}
             {activeTab === "pipeline" && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Pipeline Settings</h2>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold text-gray-800">Pipeline Settings</h2>
+                  <div className="text-sm text-gray-500">Total Stages: {settings.pipelineStages.length}</div>
+                </div>
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-gray-800">Pipeline Stages</h3>
+                  <p className="text-sm text-gray-600">
+                    Manage your sales pipeline stages. You can edit, reorder, and add new stages at any position.
+                  </p>
 
-                  <div className="space-y-2">
-                    {settings.pipelineStages.map((stage) => (
-                      <div key={stage.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-4 h-4 rounded-full ${stage.color}`}></div>
-                          <span className="font-medium">{stage.name}</span>
-                          <span className="text-xs text-gray-500">({stage.id})</span>
+                  <div className="space-y-3">
+                    {sortedStages.map((stage, index) => (
+                      <div key={stage.id}>
+                        {/* Add Stage at Beginning */}
+                        {index === 0 && showAddStageAt === 1 && (
+                          <div className="mb-2 p-4 border border-dashed border-green-300 rounded-lg bg-green-50">
+                            <h4 className="text-sm font-medium text-green-800 mb-3">Add New Stage at Beginning</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                              <div>
+                                <input
+                                  type="text"
+                                  value={newStageAtPosition.id}
+                                  onChange={(e) =>
+                                    setNewStageAtPosition({
+                                      ...newStageAtPosition,
+                                      id: e.target.value.toLowerCase().replace(/\s+/g, "-"),
+                                    })
+                                  }
+                                  placeholder="Stage ID"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="text"
+                                  value={newStageAtPosition.name}
+                                  onChange={(e) =>
+                                    setNewStageAtPosition({ ...newStageAtPosition, name: e.target.value })
+                                  }
+                                  placeholder="Stage Name"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <select
+                                  value={newStageAtPosition.color}
+                                  onChange={(e) =>
+                                    setNewStageAtPosition({ ...newStageAtPosition, color: e.target.value })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                >
+                                  {availableColors.map((color) => (
+                                    <option key={color.value} value={color.value}>
+                                      {color.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleAddStageAtPosition(1)}
+                                  className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
+                                  disabled={!newStageAtPosition.id || !newStageAtPosition.name}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  Add
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowAddStageAt(null)
+                                    setNewStageAtPosition({ id: "", name: "", color: "bg-gray-500", position: 0 })
+                                  }}
+                                  className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Existing Stage */}
+                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          {/* Drag Handle */}
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => moveStage(stage.id, "up")}
+                              disabled={stage.order === 1}
+                              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                            >
+                              <ChevronUp className="w-3 h-3" />
+                            </button>
+                            <GripVertical className="w-4 h-4 text-gray-400" />
+                            <button
+                              onClick={() => moveStage(stage.id, "down")}
+                              disabled={stage.order === settings.pipelineStages.length}
+                              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                            >
+                              <ChevronDown className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Stage Order */}
+                          <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full border-2 border-gray-300 text-sm font-semibold text-gray-600">
+                            {stage.order}
+                          </div>
+
+                          {/* Stage Content */}
+                          <div className="flex-1">
+                            {editingStageId === stage.id ? (
+                              // Edit Mode
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={editingStage.name}
+                                    onChange={(e) => setEditingStage({ ...editingStage, name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Stage name"
+                                  />
+                                </div>
+                                <div>
+                                  <select
+                                    value={editingStage.color}
+                                    onChange={(e) => setEditingStage({ ...editingStage, color: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  >
+                                    {availableColors.map((color) => (
+                                      <option key={color.value} value={color.value}>
+                                        {color.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={handleSaveEdit}
+                                    className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              // View Mode
+                              <div className="flex items-center gap-3">
+                                <div className={`w-4 h-4 rounded-full ${stage.color}`}></div>
+                                <span className="font-medium">{stage.name}</span>
+                                <span className="text-xs text-gray-500">({stage.id})</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          {editingStageId !== stage.id && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditStage(stage)}
+                                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
+                                title="Edit Stage"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => setShowAddStageAt(stage.order + 1)}
+                                className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded"
+                                title="Add Stage After"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleRemoveStage(stage.id)}
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
+                                title="Remove Stage"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => handleRemoveStage(stage.id)}
-                          className="p-1 text-red-600 hover:text-red-700"
-                          title="Remove Stage"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+
+                        {/* Add Stage at Position Form */}
+                        {showAddStageAt === stage.order + 1 && (
+                          <div className="ml-12 mt-2 p-4 border border-dashed border-green-300 rounded-lg bg-green-50">
+                            <h4 className="text-sm font-medium text-green-800 mb-3">
+                              Add New Stage After "{stage.name}"
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                              <div>
+                                <input
+                                  type="text"
+                                  value={newStageAtPosition.id}
+                                  onChange={(e) =>
+                                    setNewStageAtPosition({
+                                      ...newStageAtPosition,
+                                      id: e.target.value.toLowerCase().replace(/\s+/g, "-"),
+                                    })
+                                  }
+                                  placeholder="Stage ID"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="text"
+                                  value={newStageAtPosition.name}
+                                  onChange={(e) =>
+                                    setNewStageAtPosition({ ...newStageAtPosition, name: e.target.value })
+                                  }
+                                  placeholder="Stage Name"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <select
+                                  value={newStageAtPosition.color}
+                                  onChange={(e) =>
+                                    setNewStageAtPosition({ ...newStageAtPosition, color: e.target.value })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                >
+                                  {availableColors.map((color) => (
+                                    <option key={color.value} value={color.value}>
+                                      {color.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleAddStageAtPosition(stage.order + 1)}
+                                  className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
+                                  disabled={!newStageAtPosition.id || !newStageAtPosition.name}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  Add
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowAddStageAt(null)
+                                    setNewStageAtPosition({ id: "", name: "", color: "bg-gray-500", position: 0 })
+                                  }}
+                                  className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
 
+                  {/* Add Stage at Beginning Button */}
+                  {showAddStageAt !== 1 && (
+                    <div className="flex justify-center">
+                      <button
+                        onClick={() => setShowAddStageAt(1)}
+                        className="px-4 py-2 border-2 border-dashed border-green-300 text-green-600 rounded-lg hover:bg-green-50 flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Stage at Beginning
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Add Stage at End */}
                   <div className="p-4 border border-dashed border-gray-300 rounded-lg">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Add New Stage</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Add New Stage at End</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">Stage ID</label>
                         <input
                           type="text"
                           value={newStage.id}
                           onChange={(e) =>
                             setNewStage({ ...newStage, id: e.target.value.toLowerCase().replace(/\s+/g, "-") })
                           }
-                          placeholder="e.g., follow-up"
+                          placeholder="Stage ID"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">Stage Name</label>
                         <input
                           type="text"
                           value={newStage.name}
                           onChange={(e) => setNewStage({ ...newStage, name: e.target.value })}
-                          placeholder="e.g., Follow Up"
+                          placeholder="Stage Name"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">Color</label>
                         <select
                           value={newStage.color}
                           onChange={(e) => setNewStage({ ...newStage, color: e.target.value })}
@@ -885,39 +1256,59 @@ export default function SettingsPage() {
                           ))}
                         </select>
                       </div>
+                      <div>
+                        <button
+                          onClick={handleAddStage}
+                          className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-1 text-sm"
+                          disabled={!newStage.id || !newStage.name}
+                        >
+                          <Plus className="w-3 h-3" />
+                          Add Stage
+                        </button>
+                      </div>
                     </div>
-                    <div className="mt-3 flex justify-end">
-                      <button
-                        onClick={handleAddStage}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1 text-sm"
-                        disabled={!newStage.id || !newStage.name}
-                      >
-                        <Plus className="w-3 h-3" />
-                        Add Stage
-                      </button>
-                    </div>
+                  </div>
+                </div>
+
+                {/* Pipeline Preview */}
+                <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-medium text-blue-800 mb-3">Pipeline Preview</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {sortedStages.map((stage, index) => (
+                      <div key={stage.id} className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border">
+                          <div className={`w-3 h-3 rounded-full ${stage.color}`}></div>
+                          <span className="text-sm font-medium">{stage.name}</span>
+                        </div>
+                        {index < sortedStages.length - 1 && <div className="text-gray-400">→</div>}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Leads Settings */}
+            {/* Simple Leads Settings */}
             {activeTab === "leads" && (
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Leads Settings</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Lead Sources */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-gray-800">Lead Sources</h3>
+                    <p className="text-sm text-gray-600">Manage where your leads come from</p>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {settings.leadSources.map((source, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <span>{source}</span>
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                        >
+                          <span className="font-medium">{source}</span>
                           <button
                             onClick={() => handleRemoveSource(source)}
-                            className="p-1 text-red-600 hover:text-red-700"
+                            className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
                             title="Remove Source"
                           >
                             <X className="w-4 h-4" />
@@ -947,14 +1338,18 @@ export default function SettingsPage() {
                   {/* Lead Statuses */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-gray-800">Lead Statuses</h3>
+                    <p className="text-sm text-gray-600">Manage lead status options</p>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {settings.leadStatuses.map((status, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <span>{status}</span>
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                        >
+                          <span className="font-medium">{status}</span>
                           <button
                             onClick={() => handleRemoveStatus(status)}
-                            className="p-1 text-red-600 hover:text-red-700"
+                            className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
                             title="Remove Status"
                           >
                             <X className="w-4 h-4" />
@@ -978,6 +1373,19 @@ export default function SettingsPage() {
                       >
                         <Plus className="w-4 h-4" />
                       </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Summary</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm text-blue-700">
+                    <div>
+                      Lead Sources: <span className="font-semibold">{settings.leadSources.length}</span>
+                    </div>
+                    <div>
+                      Lead Statuses: <span className="font-semibold">{settings.leadStatuses.length}</span>
                     </div>
                   </div>
                 </div>

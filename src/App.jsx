@@ -18,6 +18,8 @@ import ForecastReport from './pages/Forcast';
 import ActivityLogs from './pages/Activity';
 import Leads from './pages/Leads1';
 import Page from './settings/page'
+import RegisterPage from './pages/Register'
+import LoginPage from './pages/LogIn';
 import {ThemeProvider} from './contextAPI/contextTheme/ThemeContext'
 function App() {
 
@@ -27,11 +29,14 @@ function App() {
 
      <div className='bg-[#FCF7E3]'>
       <BrowserRouter>
-      {/* <Navbar/> */}
+      <Navbar/>
 
       <Routes>
       {/* <Route path='/' element={<Home/>}/> */}
       <Route path='/sign-up' element={<SignUp/>}/>
+      <Route path='/register' element={<RegisterPage/>}/>
+      <Route path='/login' element={<LoginPage/>}/>
+
       <Route path='/' element={<Dashboard/>}></Route>
       <Route path='/leads' element={<LeadsPage/>}/>
       <Route path='/contacts' element={<ContactsPage/>}/>
