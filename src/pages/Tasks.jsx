@@ -943,7 +943,7 @@ const Tasks = () => {
                             className="rounded border-gray-300"
                           />
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-nowrap">
                           <div className="flex items-start gap-3">
                             <div className="flex items-center gap-2">
                               <button
@@ -992,7 +992,7 @@ const Tasks = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-nowrap">
                           <div
                             className={`text-sm ${
                               isOverdue(task.dueDate, task.completed) ? "text-red-600 font-medium" : "text-gray-900"
@@ -1019,7 +1019,7 @@ const Tasks = () => {
                             {task.status.replace("-", " ")}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-nowrap">
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
                               {task.assignedTo
@@ -1130,7 +1130,7 @@ const Tasks = () => {
                 {calendarDays.map((day, index) => (
                   <div
                     key={index}
-                    className={`min-h-[120px] border border-gray-200 p-2 ${
+                    className={`min-h-[60px] sm:min-h-[120px] flex items-center justify-center border border-gray-200 p-2 ${
                       day
                         ? day.toDateString() === new Date().toDateString()
                           ? "bg-blue-50 border-blue-200"

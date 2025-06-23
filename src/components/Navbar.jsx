@@ -33,7 +33,7 @@ const navigation = [
     ],
     icon: <ChevronDownIcon className="h-4 w-4 text-white" />
   },
-  { name: 'Settings', href: '/settings', current: false },
+  // { name: 'Settings', href: '/settings', current: false },
 
 ]
 
@@ -100,7 +100,7 @@ export default function Navbar() {
                               leaveFrom="transform opacity-100 scale-100"
                               leaveTo="transform opacity-0 scale-95"
                             >
-                              <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                              <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-grey ring-opacity-5 focus:outline-none">
                                 {item.submenu.map((subItem) => (
                                   <Menu.Item key={subItem.label}>
                                     {({ active }) => (
@@ -146,7 +146,7 @@ export default function Navbar() {
                   {/* Notifications */}
                   <button
                     type="button"
-                    className="relative rounded-full bg-white p-1 text-black hover:text-gry focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
+                    className="relative rounded-full bg-white p-1 text-black hover:text-gry focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
                   >
                     <span className="absolute -inset-1.5" />
                     <span className="sr-only">View notifications</span>
@@ -159,7 +159,7 @@ export default function Navbar() {
                   {/* Messages */}
                   <button
                     type="button"
-                    className="relative ml-3 rounded-full bg-white p-1 text-black hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
+                    className="relative ml-3 rounded-full bg-white p-1 text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
                   >
                     <span className="absolute -inset-1.5" />
                     <span className="sr-only">View messages</span>
@@ -172,7 +172,7 @@ export default function Navbar() {
                   {/* Profile dropdown */}
                   <Menu as="div" className="relative ml-3">
                     <div>
-                      <Menu.Button className="relative flex max-w-xs items-center rounded-full bg-[#EF6D8D] text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600">
+                      <Menu.Button className="relative flex max-w-xs items-center rounded-full bg-[#EF6D8D] text-sm focus:outline-none focus:ring-white focus:ring-offset-2">
                         <span className="absolute -inset-1.5" />
                         <span className="sr-only">Open user menu</span>
                         <img
@@ -180,7 +180,12 @@ export default function Navbar() {
                           src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                           alt=""
                         />
+                        <div className='flex items-center'>
                         <span className="ml-2 text-white">Administrator</span>
+                        <ChevronDownIcon className="h-4 w-4 text-white ml-1" />
+
+                        </div>
+
                       </Menu.Button>
                     </div>
                     <Transition
@@ -192,7 +197,7 @@ export default function Navbar() {
                       leaveFrom="transform opacity-100 scale-100"
                       leaveTo="transform opacity-0 scale-95"
                     >
-                      <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-grey ring-opacity-5 focus:outline-none">
                         <Menu.Item>
                           {({ active }) => (
                             <Link
@@ -224,6 +229,7 @@ export default function Navbar() {
                             <button
                               onClick={() => {
                                 // Handle logout
+                              
                               }}
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
@@ -246,7 +252,7 @@ export default function Navbar() {
 
               {/* Mobile menu button */}
               <div className="-mr-2 flex md:hidden">
-                <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-indigo-200 hover:bg-indigo-500 hover:bg-opacity-75 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600">
+                <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-indigo-500 hover:bg-opacity-75 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2">
                   <span className="absolute -inset-0.5" />
                   <span className="sr-only">Open main menu</span>
                   {open ? (
@@ -316,7 +322,7 @@ export default function Navbar() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-indigo-700 pb-3 pt-4">
+            <div className="border-t border-white pb-3 pt-4">
               <div className="flex items-center px-5">
                 <div className="flex-shrink-0">
                   <img
@@ -327,11 +333,11 @@ export default function Navbar() {
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium text-white">Administrator</div>
-                  <div className="text-sm font-medium text-indigo-300">admin@example.com</div>
+                  <div className="text-sm font-medium text-white">admin@example.com</div>
                 </div>
                 <button
                   type="button"
-                  className="relative ml-auto flex-shrink-0 rounded-full bg-indigo-600 p-1 text-indigo-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
+                  className="relative ml-auto flex-shrink-0 rounded-full bg-white p-1 text-black hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
                 >
                   <span className="absolute -inset-1.5" />
                   <span className="sr-only">View notifications</span>

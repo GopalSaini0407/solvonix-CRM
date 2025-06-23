@@ -687,7 +687,7 @@ const CalendarPage = () => {
 
           {/* Search and Filters */}
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -712,7 +712,7 @@ const CalendarPage = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <button
                   onClick={prevPeriod}
@@ -791,7 +791,7 @@ const CalendarPage = () => {
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                   <div
                     key={day}
-                    className="p-4 text-center font-medium text-gray-600 border-r border-gray-200 last:border-r-0"
+                    className="p-4 text-center flex justify-center items-center font-medium text-gray-600 border-r border-gray-200 last:border-r-0"
                   >
                     {day}
                   </div>
@@ -852,7 +852,7 @@ const CalendarPage = () => {
                 {weekDays.map((day, index) => (
                   <div
                     key={index}
-                    className={`p-4 text-center border-r border-gray-200 last:border-r-0 ${isToday(day) ? "bg-blue-50" : ""}`}
+                    className={`p-4 text-center border-r border-gray-200 last:border-r-0 flex flex-col items-center justify-center ${isToday(day) ? "bg-blue-50" : ""}`}
                   >
                     <div className="text-sm text-gray-600">{day.toLocaleDateString("en-US", { weekday: "short" })}</div>
                     <div className={`text-lg font-semibold ${isToday(day) ? "text-blue-600" : "text-gray-900"}`}>

@@ -447,7 +447,7 @@ const OpportunitiesPage = () => {
                   placeholder="Search opportunities..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="sm:w-80 w-[100%] pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <select
@@ -491,11 +491,13 @@ const OpportunitiesPage = () => {
 
         {/* Pipeline View */}
         {viewMode === "pipeline" && (
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+                      <div className="overflow-x-auto">
+
+          <div className="flex flex-nowrap gap-4">
             {filteredStages.map((stage) => (
               <div
                 key={stage.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]"
+                className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[400px] min-w-[300px]"
                 onDragOver={handleDragOver}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
@@ -556,6 +558,7 @@ const OpportunitiesPage = () => {
                 </div>
               </div>
             ))}
+          </div>
           </div>
         )}
 
@@ -658,12 +661,12 @@ const OpportunitiesPage = () => {
                     .map((opportunity) => (
                       <tr key={opportunity.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div>
+                          <div className="text-nowrap">
                             <div className="font-medium text-gray-900">{opportunity.name}</div>
                             <div className="text-sm text-gray-500">{opportunity.contact}</div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{opportunity.company}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 text-nowrap">{opportunity.company}</td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-semibold text-green-600">
                             ₹{(opportunity.value / 100000).toFixed(1)}L

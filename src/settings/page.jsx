@@ -367,7 +367,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b">
+        <div className="p-6 border-b border-gray-300">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Settings</h1>
@@ -395,7 +395,7 @@ export default function SettingsPage() {
 
         <div className="flex flex-col lg:flex-row">
           {/* Sidebar */}
-          <div className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r p-4">
+          <div className="w-full lg:w-64 border-gray-300 border-b lg:border-b-0  lg:border-r p-4">
             <h3 className="font-semibold text-gray-800 mb-4 px-2">Categories</h3>
             <div className="space-y-1">
               {[
@@ -944,7 +944,7 @@ export default function SettingsPage() {
             {/* Enhanced Pipeline Settings */}
             {activeTab === "pipeline" && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center flex-wrap">
                   <h2 className="text-xl font-semibold text-gray-800">Pipeline Settings</h2>
                   <div className="text-sm text-gray-500">Total Stages: {settings.pipelineStages.length}</div>
                 </div>
@@ -955,9 +955,9 @@ export default function SettingsPage() {
                     Manage your sales pipeline stages. You can edit, reorder, and add new stages at any position.
                   </p>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3 overflow-x-auto" >
                     {sortedStages.map((stage, index) => (
-                      <div key={stage.id}>
+                      <div key={stage.id} className="min-w-[450px]">
                         {/* Add Stage at Beginning */}
                         {index === 0 && showAddStageAt === 1 && (
                           <div className="mb-2 p-4 border border-dashed border-green-300 rounded-lg bg-green-50">
@@ -1135,7 +1135,7 @@ export default function SettingsPage() {
 
                         {/* Add Stage at Position Form */}
                         {showAddStageAt === stage.order + 1 && (
-                          <div className="ml-12 mt-2 p-4 border border-dashed border-green-300 rounded-lg bg-green-50">
+                          <div className="sm:ml-12 mt-2 p-4 border border-dashed border-green-300 rounded-lg bg-green-50">
                             <h4 className="text-sm font-medium text-green-800 mb-3">
                               Add New Stage After "{stage.name}"
                             </h4>

@@ -523,7 +523,7 @@ const MeetingsPage = () => {
 
           {/* Filters and Search */}
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -531,7 +531,7 @@ const MeetingsPage = () => {
                   placeholder="Search meetings..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="sm:w-80 w-[100%] pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -598,7 +598,7 @@ const MeetingsPage = () => {
                         {getMeetingTypeIcon(meeting.type)}
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{meeting.title}</h3>
+                        <h3 className="sm:text-lg font-semibold text-gray-900">{meeting.title}</h3>
                         <p className="text-sm text-gray-600">{meeting.description}</p>
                       </div>
                     </div>
@@ -637,7 +637,7 @@ const MeetingsPage = () => {
                     </div>
 
                     <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(meeting.status)}`}>
                           {meeting.status.replace("-", " ")}
                         </span>
@@ -686,7 +686,7 @@ const MeetingsPage = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Schedule New Meeting</h2>
+                <h2 className="sm:text-xl font-semibold">Schedule New Meeting</h2>
                 <button onClick={() => setIsMeetingModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-5 h-5" />
                 </button>
@@ -969,7 +969,7 @@ const MeetingsPage = () => {
                     {getMeetingTypeIcon(selectedMeeting.type)}
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold">{selectedMeeting.title}</h2>
+                    <h2 className="sm:text-xl font-semibold">{selectedMeeting.title}</h2>
                     <p className="text-gray-600">{selectedMeeting.description}</p>
                   </div>
                 </div>
@@ -1023,7 +1023,7 @@ const MeetingsPage = () => {
               </div>
 
               {/* Tabs */}
-              <div className="border-b border-gray-200 mb-6">
+              <div className="border-b border-gray-200 mb-6 overflow-x-auto">
                 <nav className="flex space-x-8">
                   {[
                     { id: "details", name: "Details", icon: FileText },
@@ -1035,7 +1035,7 @@ const MeetingsPage = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
+                      className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm text-nowrap ${
                         activeTab === tab.id
                           ? "border-blue-500 text-blue-600"
                           : "border-transparent text-gray-500 hover:text-gray-700"
@@ -1417,7 +1417,7 @@ const MeetingsPage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 flex-wrap gap-3">
                 <button
                   onClick={() => handleDeleteMeeting(selectedMeeting.id)}
                   className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg flex items-center gap-2"

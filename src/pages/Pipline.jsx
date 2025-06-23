@@ -671,7 +671,8 @@ const SalesPipelinePage = () => {
         </div>
 
         {/* View Selector */}
-        <div className="flex items-center border-b border-gray-200 mb-6">
+        <div class="overflow-x-auto" >
+        <div className="flex items-center sm:border-b sm:border-gray-200  mb-6 flex-nowrap">
           {[
             { id: "overview", label: "Overview" },
             { id: "by-stage", label: "By Stage" },
@@ -682,7 +683,7 @@ const SalesPipelinePage = () => {
             <button
               key={view.id}
               onClick={() => setSelectedView(view.id)}
-              className={`px-4 py-3 text-sm font-medium transition-colors ${
+              className={`px-4 py-3 text-sm font-medium transition-colors text-nowrap ${
                 selectedView === view.id
                   ? "text-blue-600 border-b-2 border-blue-600"
                   : "text-gray-600 hover:text-gray-900"
@@ -693,12 +694,14 @@ const SalesPipelinePage = () => {
           ))}
         </div>
 
+        </div>
+
         {/* Overview View */}
         {selectedView === "overview" && (
           <div className="space-y-6">
             {/* Chart Type Selector */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <h2 className="text-lg font-semibold text-gray-900">Pipeline Visualization</h2>
                 <div className="flex items-center border border-gray-300 rounded-lg">
                   {[
@@ -1011,7 +1014,7 @@ const SalesPipelinePage = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 text-left">
-                    <tr>
+                    <tr className="text-nowrap">
                       <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Deal Name
                       </th>
@@ -1031,7 +1034,7 @@ const SalesPipelinePage = () => {
                     {filteredData.deals.slice(0, 5).map((deal) => {
                       const stage = pipelineStages.find((s) => s.id === deal.stage)
                       return (
-                        <tr key={deal.id} className="hover:bg-gray-50">
+                        <tr key={deal.id} className="hover:bg-gray-50 text-nowrap">
                           <td className="px-6 py-4 text-sm text-gray-900">{deal.name}</td>
                           <td className="px-6 py-4">
                             <span
@@ -1231,7 +1234,7 @@ const SalesPipelinePage = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 text-left">
-                    <tr>
+                    <tr className="text-nowrap">
                       <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Sales Rep
                       </th>
@@ -1246,7 +1249,7 @@ const SalesPipelinePage = () => {
                       <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Avg Cycle
                       </th>
-                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-nowrap">
                         Quota Attainment
                       </th>
                       <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1260,7 +1263,7 @@ const SalesPipelinePage = () => {
                       return (
                         <tr key={rep.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 text-nowrap">
                               <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-medium text-sm">
                                 {rep.name
                                   .split(" ")
@@ -1483,9 +1486,9 @@ const SalesPipelinePage = () => {
           <div className="space-y-6">
             {/* Monthly Trends */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <h3 className="text-lg font-semibold text-gray-900">Monthly Trends</h3>
-                <div className="flex items-center border border-gray-300 rounded-lg">
+                <div className="flex items-center border border-gray-300 rounded-lg text-nowrap">
                   <button className="px-3 py-1.5 text-sm bg-blue-100 text-blue-600">Value</button>
                   <button className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Deals</button>
                   <button className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Win Rate</button>
@@ -1493,7 +1496,7 @@ const SalesPipelinePage = () => {
               </div>
 
               {/* Simple Line Chart */}
-              <div className="h-64 flex items-end justify-between gap-2 px-4">
+              <div className="h-64 flex items-end justify-between gap-2 px-4 overflow-x-auto">
                 {monthlyTrends.map((month, index) => {
                   const maxValue = Math.max(...monthlyTrends.map((m) => m.value))
                   const height = (month.value / maxValue) * 100
@@ -1705,7 +1708,7 @@ const SalesPipelinePage = () => {
                               : "text-red-600"
 
                         return (
-                          <tr key={deal.id} className="hover:bg-gray-50">
+                          <tr key={deal.id} className="hover:bg-gray-50 text-nowrap">
                             <td className="px-6 py-4 text-sm text-gray-900">{deal.name}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(deal.amount)}</td>
                             <td className="px-6 py-4">
