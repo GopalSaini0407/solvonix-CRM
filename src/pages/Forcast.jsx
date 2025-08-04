@@ -456,7 +456,7 @@ const ForecastPage = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm relative"
+                  className="px-3 sm:px-4 py-2 bg-[#ef6d8d] hover:bg-[#ff3466] text-white rounded-lg flex items-center gap-2 text-sm relative"
                 >
                   <Bell className="w-4 h-4" />
                   <span className="hidden sm:inline">Alerts</span>
@@ -1565,7 +1565,7 @@ const ForecastPage = () => {
                       const variance = period.actual - period.forecast
                       const variancePercent = ((variance / period.forecast) * 100).toFixed(1)
                       return (
-                        <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        <tr key={index} className="hover:bg-gray-50 transition-colors text-nowrap">
                           <td className="px-3 sm:px-6 py-4 text-sm font-medium text-gray-900">{period.period}</td>
                           <td className="px-3 sm:px-6 py-4 text-sm text-gray-900">{formatCurrency(period.forecast)}</td>
                           <td className="px-3 sm:px-6 py-4 text-sm text-gray-900">{formatCurrency(period.actual)}</td>

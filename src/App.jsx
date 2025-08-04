@@ -1,10 +1,5 @@
-import { BrowserRouter } from 'react-router-dom';
-import {Routes, Route} from 'react-router-dom';
-
-import Navbar from './components/Navbar'
-import Header from './components/Header'
-// import Home from './pages/Home'
-import SignUp from './pages/SignUp'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import Navbar from './components/Navbar';
 import LeadsPage from './pages/Leads';
 import ContactsPage from './pages/Contacts';
 import Accounts from './pages/Accounts';
@@ -16,49 +11,59 @@ import Meetings from './pages/Meetings';
 import PipelineReport from './pages/Pipline';
 import ForecastReport from './pages/Forcast';
 import ActivityLogs from './pages/Activity';
-import Leads from './pages/Leads1';
-import Page from './settings/page'
-import RegisterPage from './pages/Register'
+import Page from './settings/page';
+import RegisterPage from './pages/Register';
 import LoginPage from './pages/LogIn';
-import {ThemeProvider} from './contextAPI/contextTheme/ThemeContext'
-function App() {
+import ProfilePage from './pages/Profile';
+import { ThemeProvider } from './contextAPI/contextTheme/ThemeContext';
+
+function LayoutWrapper({ children }) {
+  const location = useLocation();
+  const hideNavbarOn = ["/login", "/register"];
+  const shouldHideNavbar = hideNavbarOn.includes(location.pathname);
 
   return (
     <>
-    <ThemeProvider>
-
-     <div className='bg-[#FCF7E3]'>
-      <BrowserRouter>
-      <Navbar/>
-
-      <Routes>
-      {/* <Route path='/' element={<Home/>}/> */}
-      <Route path='/sign-up' element={<SignUp/>}/>
-      <Route path='/register' element={<RegisterPage/>}/>
-      <Route path='/login' element={<LoginPage/>}/>
-
-      <Route path='/' element={<Dashboard/>}></Route>
-      <Route path='/leads' element={<LeadsPage/>}/>
-      <Route path='/contacts' element={<ContactsPage/>}/>
-      <Route path='/accounts' element={<Accounts/>}/>
-      <Route path='/opportunities' element={<Opportunities/>}></Route>
-      <Route path='/activities/tasks' element={<Tasks/>}></Route>
-      <Route path='/activities/calendar' element={<Calendar/>}></Route>
-      <Route path='/activities/meetings' element={<Meetings/>}></Route>
-      <Route path='/reports/pipeline' element={<PipelineReport/>}></Route>
-      <Route path='/reports/forecast' element={<ForecastReport/>}></Route>
-      <Route path='/reports/activity' element={<ActivityLogs/>}></Route>
-      <Route path='/leads-1' element={<Leads/>}></Route>
-      <Route path='/settings' element={<Page/>}></Route>
-
-      </Routes>
-     </BrowserRouter>
-
-     </div>
-     </ThemeProvider>
-
+      {!shouldHideNavbar && <Navbar />}
+      <main>{children}</main>
     </>
-  )
+  );
 }
 
-export default App
+function AppRoutes() {
+  return (
+    <LayoutWrapper>
+      <Routes>
+        <Route path='/register' element={<RegisterPage />} />
+        <Route path='/login' element={<LoginPage />} />
+        <Route path='/' element={<Dashboard />} />
+        <Route path='/leads' element={<LeadsPage />} />
+        <Route path='/contacts' element={<ContactsPage />} />
+        <Route path='/accounts' element={<Accounts />} />
+        <Route path='/opportunities' element={<Opportunities />} />
+        <Route path='/activities/tasks' element={<Tasks />} />
+        <Route path='/activities/calendar' element={<Calendar />} />
+        <Route path='/activities/meetings' element={<Meetings />} />
+        <Route path='/reports/pipeline' element={<PipelineReport />} />
+        <Route path='/reports/forecast' element={<ForecastReport />} />
+        <Route path='/reports/activity' element={<ActivityLogs />} />
+        <Route path='/settings' element={<Page />} />
+        <Route path='/profile' element={<ProfilePage />} />
+      </Routes>
+    </LayoutWrapper>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <div className='bg-[#FCF7E3]'>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </div>
+    </ThemeProvider>
+  );
+}
+
+export default App;

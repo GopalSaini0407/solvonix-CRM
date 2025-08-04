@@ -714,7 +714,7 @@ export default function AccountsPageComplete() {
         </button>
         <button
           onClick={onSave}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+          className="px-4 py-2 bg-[#ef6d8d] hover:bg-[#ff3466] text-white rounded-lg flex items-center space-x-2"
         >
           <Save className="w-4 h-4" />
           <span>{isEdit ? "Update Account" : "Save Account"}</span>
@@ -972,7 +972,7 @@ export default function AccountsPageComplete() {
           <div className="flex space-x-2">
             <button
               onClick={() => handleEditAccount(account)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+              className="px-4 py-2 bg-[#ef6d8d] hover:bg-[#ff3466] text-white rounded-lg flex items-center space-x-2"
             >
               <Edit className="w-4 h-4" />
               <span>Edit</span>
@@ -1147,7 +1147,7 @@ export default function AccountsPageComplete() {
               <h3 className="text-lg font-semibold text-gray-900">Contacts ({account.contacts})</h3>
               <button
                 onClick={handleAddContact}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                className="px-4 py-2 bg-[#ef6d8d] hover:bg-[#ff3466] text-white rounded-lg flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Contact</span>
@@ -1163,7 +1163,7 @@ export default function AccountsPageComplete() {
               <h3 className="text-lg font-semibold text-gray-900">Opportunities ({account.opportunities})</h3>
               <button
                 onClick={handleAddOpportunity}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                className="px-4 py-2 bg-[#ef6d8d] hover:bg-[#ff3466] text-white rounded-lg flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Opportunity</span>
@@ -1181,7 +1181,7 @@ export default function AccountsPageComplete() {
               <h3 className="text-lg font-semibold text-gray-900">Activities ({account.activities})</h3>
               <button
                 onClick={handleLogActivity}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                className="px-4 py-2 bg-[#ef6d8d] hover:bg-[#ff3466] text-white rounded-lg flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Log Activity</span>
@@ -1197,7 +1197,7 @@ export default function AccountsPageComplete() {
               <h3 className="text-lg font-semibold text-gray-900">Documents</h3>
               <button
                 onClick={handleUploadDocument}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                className="px-4 py-2 bg-[#ef6d8d] hover:bg-[#ff3466] text-white rounded-lg flex items-center space-x-2"
               >
                 <Upload className="w-4 h-4" />
                 <span>Upload Document</span>
@@ -1234,7 +1234,7 @@ export default function AccountsPageComplete() {
                   </button>
                   <button
                     onClick={handleAddAccount}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                    className="px-4 py-2 bg-[#ef6d8d] hover:bg-[#ff3466] text-white rounded-lg flex items-center space-x-2"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add Account</span>

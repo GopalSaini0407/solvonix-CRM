@@ -637,7 +637,7 @@ const CalendarPage = () => {
               </button>
               <button
                 onClick={() => setIsEventModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                className="bg-[#ef6d8d] hover:bg-[#ff3466] text-white px-4 py-2 rounded-lg flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Add Event
@@ -802,7 +802,7 @@ const CalendarPage = () => {
                 {monthDays.map((day, index) => (
                   <div
                     key={index}
-                    className={`min-h-[120px] border-r border-b border-gray-200 last:border-r-0 p-2 ${
+                    className={`min-h-[60px] flex items-center justify-center sm:min-h-[120px] border-r border-b border-gray-200 last:border-r-0 p-2 ${
                       !isCurrentMonth(day) ? "bg-gray-50" : ""
                     } ${isToday(day) ? "bg-blue-50" : ""}`}
                     onDragOver={handleDragOver}

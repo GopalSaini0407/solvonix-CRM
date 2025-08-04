@@ -1,87 +1,107 @@
 "use client"
 
 import { useState } from "react"
-// import { useAuth } from "../../contexts/AuthContext"
+import { useNavigate } from "react-router-dom"
 
-export default function LoginPage({ onLogin, onSwitchToRegister }) {
+export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  // const { login, isLoading } = useAuth()
-  const { login, isLoading } = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
-    const success = await login(email, password)
-    if (success) {
-      onLogin()
+    // Simulate login
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    if (email && password) {
+      localStorage.setItem("token", "demo_token"); // fake token for testing
+      onLogin?.();
+      navigate("/");
     } else {
-      setError("Invalid credentials")
+      setError("Invalid credentials");
     }
-  }
+
+    setIsLoading(false);
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-6 text-center">
-          <h2 className="text-2xl font-bold text-gray-900">CRM Login</h2>
-          <p className="text-gray-600 mt-1">Sign in to your account</p>
+    <div
+      className="flex min-h-screen items-center justify-center bg-cover bg-center bg-no-repeat bg-gray-100 px-4 py-8"
+      style={{ backgroundImage: `url('./images/register-img.png')` }}
+    >
+      <div className="bg-white bg-opacity-90 shadow-lg rounded-lg flex flex-col md:flex-row w-full max-w-[1000px] overflow-hidden">
+        
+        {/* LEFT SECTION - hide on mobile */}
+        <div className="hidden md:flex w-full md:w-1/3 bg-gray-200 p-8 flex-col">
+          <div className="img-box">
+            <img src="./images/logo-crm.png" alt="logo" className="w-100" />
+          </div>
+          <p className="mt-4 text-gray-600 text-lg">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Eligendi velit omnis ut ratione quia magnam nihil...
+          </p>
         </div>
-        <div className="px-6 pb-6">
+
+        {/* RIGHT SECTION */}
+        <div className="w-full md:w-2/3 p-8">
+
+          {/* Mobile: Show Logo Centered */}
+          <div className="md:hidden flex flex-col items-center mb-4">
+            <img src="./images/logo-crm.png" alt="logo" className="w-50 mb-2" />
+            <h2 className="text-xl font-bold text-gray-800">CRM Login</h2>
+          </div>
+
+          {/* Desktop: Title */}
+          <h2 className="hidden md:block text-2xl font-bold text-gray-800 mb-2">CRM Login</h2>
+          <p className="text-gray-600 mb-6">Sign in to your account</p>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            {error && <div className="text-red-600 text-sm">{error}</div>}
+            <input
+              type="email"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full shadow-md p-2 outline-none rounded"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full shadow-md p-2 outline-none rounded"
+              required
+            />
+
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition duration-150 ease-in-out ${
+              className={`w-full bg-pink-500 hover:bg-pink-600 text-white py-2 px-4 rounded-md font-medium transition duration-150 ease-in-out ${
                 isLoading ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </button>
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Don't have an account?{" "}
-                <button
-                  onClick={onSwitchToRegister}
-                  className="text-blue-600 hover:underline font-medium"
-                >
-                  Create one here
-                </button>
-              </p>
-            </div>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <button
+                onClick={() => navigate('/register')}
+                className="text-pink-500 hover:underline font-medium"
+              >
+                Create one here
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

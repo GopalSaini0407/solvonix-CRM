@@ -490,7 +490,7 @@ export default function LeadsPage() {
             </div>
             <button
               onClick={() => setIsAddLeadOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              className="bg-[#ef6d8d] hover:bg-[#ff3466] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add New Lead

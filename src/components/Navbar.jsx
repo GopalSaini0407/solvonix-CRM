@@ -1,7 +1,7 @@
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon, ChevronDownIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 import { Fragment, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation,useNavigate } from 'react-router-dom'
 // import TenantSelector from './TenantSelector' // You'll need to create this component
 import ThemeSelector from '../contextAPI/contextTheme/ThemeSelector'
 
@@ -44,7 +44,7 @@ function classNames(...classes) {
 export default function Navbar() {
   const [openIndex, setOpenIndex] = useState(null)
   const location = useLocation()
-  
+  const navigate=useNavigate();
   // Update current based on route
   const updatedNavigation = navigation.map(item => ({
     ...item,
@@ -76,7 +76,7 @@ export default function Navbar() {
                 </div>
                 
                 {/* Desktop navigation */}
-                <div className="hidden md:ml-6 md:block">
+                <div className="hidden md:ml-6 lg:block">
                   <div className="flex space-x-1 items-center">
                     {updatedNavigation.map((item, index) => (
                       <div key={item.name} className="relative group">
@@ -84,7 +84,7 @@ export default function Navbar() {
                           <Menu as="div" className="relative">
                             <Menu.Button
                               className={classNames(
-                                item.current ? 'bg-indigo-700 text-white' : 'text-white hover:bg-[#cf8195] hover:bg-opacity-75',
+                                item.current ? ' text-white' : 'text-white hover:bg-[#cf8195] hover:bg-opacity-75',
                                 'rounded-md px-3 py-2 text-sm font-medium flex items-center'
                               )}
                             >
@@ -138,7 +138,7 @@ export default function Navbar() {
               </div>
 
               {/* Right side elements */}
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 <div className="ml-4 flex items-center md:ml-6">
                   {/* Tenant selector */}
                   {/* <TenantSelector /> */}
@@ -227,10 +227,7 @@ export default function Navbar() {
                         <Menu.Item>
                           {({ active }) => (
                             <button
-                              onClick={() => {
-                                // Handle logout
-                              
-                              }}
+                              onClick={() => navigate('/login')}
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
                                 'block w-full text-left px-4 py-2 text-sm text-gray-700'
@@ -244,15 +241,15 @@ export default function Navbar() {
                     </Transition>
                   </Menu>
                   {/* theme selctior button */}
-                  <ThemeSelector/>
+                  {/* <ThemeSelector/> */}
 
                 </div>
 
               </div>
 
               {/* Mobile menu button */}
-              <div className="-mr-2 flex md:hidden">
-                <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-indigo-500 hover:bg-opacity-75 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2">
+              <div className="-mr-2 flex lg:hidden">
+                <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-opacity-75 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2">
                   <span className="absolute -inset-0.5" />
                   <span className="sr-only">Open main menu</span>
                   {open ? (
@@ -267,7 +264,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu */}
-          <Disclosure.Panel className="md:hidden">
+          <Disclosure.Panel className="xl:hidden">
             <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
               {updatedNavigation.map((item, index) => (
                 <div key={item.name}>
@@ -276,7 +273,7 @@ export default function Navbar() {
                       <button
                         onClick={() => handleSubmenuToggle(index)}
                         className={classNames(
-                          item.current ? 'bg-indigo-700 text-white' : 'text-white hover:bg-indigo-500 hover:bg-opacity-75',
+                          item.current ? 'bg-pink-700 text-white' : 'text-white hover:bg-pink-500 hover:bg-opacity-75',
                           'flex w-full items-center justify-between rounded-md px-3 py-2 text-base font-medium'
                         )}
                       >
@@ -297,7 +294,7 @@ export default function Navbar() {
                               as={Link}
                               to={subItem.href}
                               className={classNames(
-                                subItem.current ? 'bg-indigo-700 text-white' : 'text-white hover:bg-indigo-500 hover:bg-opacity-75',
+                                subItem.current ? 'bg-white text-[#ef6d8d]' : 'text-white hover:bg-pink-500 hover:bg-opacity-75',
                                 'block rounded-md px-3 py-2 text-base font-medium'
                               )}
                             >
@@ -312,7 +309,7 @@ export default function Navbar() {
                       as={Link}
                       to={item.href}
                       className={classNames(
-                        item.current ? 'bg-indigo-700 text-white' : 'text-white hover:bg-indigo-500 hover:bg-opacity-75',
+                        item.current ? 'bg-white text-[#ef6d8d]' : 'text-white hover:bg-pink-500 hover:bg-opacity-75',
                         'block rounded-md px-3 py-2 text-base font-medium'
                       )}
                     >
@@ -361,9 +358,7 @@ export default function Navbar() {
                 </Disclosure.Button>
                 <Disclosure.Button
                   as="button"
-                  onClick={() => {
-                    // Handle logout
-                  }}
+                  onClick={() => navigate('/login')}
                   className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-white hover:bg-indigo-500 hover:bg-opacity-75"
                 >
                   Sign out
