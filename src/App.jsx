@@ -15,7 +15,12 @@ import Page from './settings/page';
 import RegisterPage from './pages/Register';
 import LoginPage from './pages/LogIn';
 import ProfilePage from './pages/Profile';
+import AddUser from './components/AddUser'
+import ViewUser from './components/ViewUser'
+
 import { ThemeProvider } from './contextAPI/contextTheme/ThemeContext';
+import { AuthProvider } from './contextAPI/contextAuth/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function LayoutWrapper({ children }) {
   const location = useLocation();
@@ -33,23 +38,30 @@ function LayoutWrapper({ children }) {
 function AppRoutes() {
   return (
     <LayoutWrapper>
-      <Routes>
-        <Route path='/register' element={<RegisterPage />} />
-        <Route path='/login' element={<LoginPage />} />
-        <Route path='/' element={<Dashboard />} />
-        <Route path='/leads' element={<LeadsPage />} />
-        <Route path='/contacts' element={<ContactsPage />} />
-        <Route path='/accounts' element={<Accounts />} />
-        <Route path='/opportunities' element={<Opportunities />} />
-        <Route path='/activities/tasks' element={<Tasks />} />
-        <Route path='/activities/calendar' element={<Calendar />} />
-        <Route path='/activities/meetings' element={<Meetings />} />
-        <Route path='/reports/pipeline' element={<PipelineReport />} />
-        <Route path='/reports/forecast' element={<ForecastReport />} />
-        <Route path='/reports/activity' element={<ActivityLogs />} />
-        <Route path='/settings' element={<Page />} />
-        <Route path='/profile' element={<ProfilePage />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path='/register' element={<RegisterPage />} />
+          <Route path='/login' element={<LoginPage />} />
+
+          <Route path='/' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path='/leads' element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
+          <Route path='/contacts' element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
+          <Route path='/accounts' element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
+          <Route path='/opportunities' element={<ProtectedRoute><Opportunities /></ProtectedRoute>} />
+          <Route path='/activities/tasks' element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+          <Route path='/activities/calendar' element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+          <Route path='/activities/meetings' element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
+          <Route path='/reports/pipeline' element={<ProtectedRoute><PipelineReport /></ProtectedRoute>} />
+          <Route path='/reports/forecast' element={<ProtectedRoute><ForecastReport /></ProtectedRoute>} />
+          <Route path='/reports/activity' element={<ProtectedRoute><ActivityLogs /></ProtectedRoute>} />
+          <Route path='/settings' element={<ProtectedRoute><Page /></ProtectedRoute>} />
+          <Route path='/profile' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path='/add_user' element={<ProtectedRoute><AddUser/></ProtectedRoute>} />
+          <Route path='/view_user' element={<ProtectedRoute><ViewUser/></ProtectedRoute>} />
+
+
+        </Routes>
+      </AuthProvider>
     </LayoutWrapper>
   );
 }

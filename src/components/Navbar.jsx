@@ -59,6 +59,13 @@ export default function Navbar() {
     setOpenIndex(openIndex === index ? null : index)
   }
 
+  const handleLogout=()=>{
+    localStorage.removeItem("login_token");
+    localStorage.removeItem("token");
+
+    navigate("/login");
+  }
+
   return (
     <Disclosure as="nav" className="text-white bg-[#EF6D8D] shadow-lg">
       {({ open }) => (
@@ -77,64 +84,69 @@ export default function Navbar() {
                 
                 {/* Desktop navigation */}
                 <div className="hidden md:ml-6 lg:block">
-                  <div className="flex space-x-1 items-center">
-                    {updatedNavigation.map((item, index) => (
-                      <div key={item.name} className="relative group">
-                        {item.submenu ? (
-                          <Menu as="div" className="relative">
-                            <Menu.Button
-                              className={classNames(
-                                item.current ? ' text-white' : 'text-white hover:bg-[#cf8195] hover:bg-opacity-75',
-                                'rounded-md px-3 py-2 text-sm font-medium flex items-center'
-                              )}
-                            >
-                              {item.name}
-                              <ChevronDownIcon className="ml-1 h-4 w-4" />
-                            </Menu.Button>
-                            <Transition
-                              as={Fragment}
-                              enter="transition ease-out duration-100"
-                              enterFrom="transform opacity-0 scale-95"
-                              enterTo="transform opacity-100 scale-100"
-                              leave="transition ease-in duration-75"
-                              leaveFrom="transform opacity-100 scale-100"
-                              leaveTo="transform opacity-0 scale-95"
-                            >
-                              <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-grey ring-opacity-5 focus:outline-none">
-                                {item.submenu.map((subItem) => (
-                                  <Menu.Item key={subItem.label}>
-                                    {({ active }) => (
-                                      <Link
-                                        to={subItem.href}
-                                        className={classNames(
-                                          subItem.current ? 'bg-indigo-100 text-indigo-900' : '',
-                                          active ? 'bg-gray-100' : '',
-                                          'block px-4 py-2 text-sm text-gray-700'
-                                        )}
-                                      >
-                                        {subItem.label}
-                                      </Link>
-                                    )}
-                                  </Menu.Item>
-                                ))}
-                              </Menu.Items>
-                            </Transition>
-                          </Menu>
-                        ) : (
-                          <Link
-                            to={item.href}
-                            className={classNames(
-                              item.current ? 'bg-white text-[#EF6D8D]' : 'text-white hover:bg-white hover:text-[#EF6D8D] hover:bg-opacity-75',
-                              'rounded-md px-3 py-2 text-sm font-medium'
-                            )}
-                          >
-                            {item.name}
-                          </Link>
+  <div className="flex space-x-1 items-center">
+    {updatedNavigation.map((item) => (
+      <div key={item.name} className="relative group">
+        {item.submenu ? (
+          <Menu as="div" className="relative">
+            <Menu.Button
+              className={classNames(
+                // Parent active if it is current OR any submenu is current
+                item.current || item.submenu.some(sub => sub.current)
+                  ? 'bg-white text-[#EF6D8D]' // Active parent style
+                  : 'text-white hover:bg-white hover:text-[#EF6D8D] hover:bg-opacity-75',
+                'rounded-md px-3 py-2 text-sm font-medium flex items-center'
+              )}
+            >
+              {item.name}
+              <ChevronDownIcon className="ml-1 h-4 w-4" />
+            </Menu.Button>
+
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items className="absolute left-0 z-10 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-grey ring-opacity-5 focus:outline-none">
+                {item.submenu.map((subItem) => (
+                  <Menu.Item key={subItem.label}>
+                    {({ active }) => (
+                      <Link
+                        to={subItem.href}
+                        className={classNames(
+                          subItem.current ? 'bg-[#EF6D8D] text-white' : '',
+                          active ? 'bg-gray-100' : '',
+                          'block px-4 py-2 text-sm text-gray-700 hover:bg-[#EF6D8D] hover:text-white'
                         )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                      >
+                        {subItem.label}
+                      </Link>
+                    )}
+                  </Menu.Item>
+                ))}
+              </Menu.Items>
+            </Transition>
+          </Menu>
+        ) : (
+          <Link
+            to={item.href}
+            className={classNames(
+              item.current ? 'bg-white text-[#EF6D8D]' : 'text-white hover:bg-white hover:text-[#EF6D8D] hover:bg-opacity-75',
+              'rounded-md px-3 py-2 text-sm font-medium'
+            )}
+          >
+            {item.name}
+          </Link>
+        )}
+      </div>
+    ))}
+  </div>
+</div>
+
               </div>
 
               {/* Right side elements */}
@@ -227,10 +239,10 @@ export default function Navbar() {
                         <Menu.Item>
                           {({ active }) => (
                             <button
-                              onClick={() => navigate('/login')}
+                              onClick={handleLogout}
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
-                                'block w-full text-left px-4 py-2 text-sm text-gray-700'
+                                'block w-full text-left px-4 py-2 cursor-pointer text-sm text-gray-700'
                               )}
                             >
                               Sign out
@@ -358,7 +370,7 @@ export default function Navbar() {
                 </Disclosure.Button>
                 <Disclosure.Button
                   as="button"
-                  onClick={() => navigate('/login')}
+                  onClick={handleLogout}
                   className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-white hover:bg-indigo-500 hover:bg-opacity-75"
                 >
                   Sign out
