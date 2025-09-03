@@ -17,6 +17,10 @@ import LoginPage from './pages/LogIn';
 import ProfilePage from './pages/Profile';
 import AddUser from './components/AddUser'
 import ViewUser from './components/ViewUser'
+import Demo from './components/Demo'
+import Demo2 from './components/Demo2'
+import Demo3 from './components/Demo3'
+import CustomContacts from './myComponents/CustomContacts';
 
 import { ThemeProvider } from './contextAPI/contextTheme/ThemeContext';
 import { AuthProvider } from './contextAPI/contextAuth/AuthContext';
@@ -42,6 +46,11 @@ function AppRoutes() {
         <Routes>
           <Route path='/register' element={<RegisterPage />} />
           <Route path='/login' element={<LoginPage />} />
+          <Route path='/demo' element={<Demo/>} />
+          <Route path='/demo2' element={<Demo2 />} />
+          <Route path='/demo3' element={<Demo3 />} />
+
+
 
           <Route path='/' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path='/leads' element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
@@ -58,7 +67,8 @@ function AppRoutes() {
           <Route path='/profile' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path='/add_user' element={<ProtectedRoute><AddUser/></ProtectedRoute>} />
           <Route path='/view_user' element={<ProtectedRoute><ViewUser/></ProtectedRoute>} />
-
+          <Route path='/custom_contacts' element={<ProtectedRoute><CustomContacts/></ProtectedRoute>} />
+          
 
         </Routes>
       </AuthProvider>

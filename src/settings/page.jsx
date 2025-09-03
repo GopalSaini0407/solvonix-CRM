@@ -25,6 +25,7 @@ import {
   GripVertical,
 } from "lucide-react"
 
+import Demo2 from '../components/Demo2'
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general")
   const [isSaving, setIsSaving] = useState(false)
@@ -404,6 +405,7 @@ export default function SettingsPage() {
                 { id: "localization", name: "Localization", icon: Globe },
                 { id: "features", name: "Features", icon: ToggleLeft },
                 { id: "dashboard", name: "Dashboard", icon: LayoutDashboard },
+                { id: "contacts", name: "Contacts", icon: LayoutDashboard },
                 { id: "pipeline", name: "Pipeline", icon: PieChart },
                 { id: "leads", name: "Leads", icon: Users },
                 { id: "accounts", name: "Accounts", icon: Building },
@@ -937,6 +939,17 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+  {/* Dashboard Settings */}
+  {activeTab === "contacts" && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Contacts Settings</h2>
+
+                <div className="space-y-6">
+                 <Demo2/>
                 </div>
               </div>
             )}

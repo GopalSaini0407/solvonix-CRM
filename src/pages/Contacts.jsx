@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import axios from "axios"
 import {
   Search,
   Filter,
   Plus,
-  Grid3X3,
-  List,
   Trash2,
   Phone,
   Mail,
@@ -22,10 +21,11 @@ import {
   MessageCircle,
   Clock,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 
 const ContactsPage = () => {
-  const [viewMode, setViewMode] = useState("grid") // grid or list
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedContacts, setSelectedContacts] = useState([])
@@ -42,242 +42,214 @@ const ContactsPage = () => {
     dealValue: "all",
   })
 
+  // API state
+  const [contacts, setContacts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0,
+    from: 0,
+    to: 0,
+  })
+  const [apiParams, setApiParams] = useState({
+    page: 1,
+    search: "",
+    category: "all",
+  })
+
+  // Dynamic form state
+  const [formFields, setFormFields] = useState({})
+  const [newContact, setNewContact] = useState({})
+  const [formLoading, setFormLoading] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' })
+
   const fileInputRef = useRef(null)
 
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: "Rajesh Kumar",
-      email: "rajesh@techsolutions.com",
-      phone: "+91 98765 43210",
-      company: "Tech Solutions Pvt Ltd",
-      position: "CEO",
-      location: "Mumbai, India",
-      category: "client",
-      tags: ["VIP", "Enterprise"],
-      avatar: "/placeholder.svg",
-      lastContact: "2024-01-15",
-      dealValue: 250000,
-      status: "active",
-      notes: "Key decision maker for enterprise solutions",
-      socialMedia: {
-        linkedin: "rajesh-kumar-tech",
-        twitter: "@rajeshkumar",
-      },
-      interactions: [
-        { type: "call", date: "2024-01-15", note: "Discussed new project requirements" },
-        { type: "email", date: "2024-01-10", note: "Sent proposal for Q1 2024" },
-        { type: "meeting", date: "2024-01-05", note: "Product demo session" },
-      ],
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      email: "priya@digitalcorp.com",
-      phone: "+91 87654 32109",
-      company: "Digital Corp",
-      position: "Marketing Director",
-      location: "Delhi, India",
-      category: "prospect",
-      tags: ["Hot Lead", "Marketing"],
-      avatar: "/placeholder.svg",
-      lastContact: "2024-01-12",
-      dealValue: 150000,
-      status: "active",
-      notes: "Interested in digital marketing solutions",
-      socialMedia: {
-        linkedin: "priya-sharma-digital",
-        twitter: "@priyasharma",
-      },
-      interactions: [
-        { type: "email", date: "2024-01-12", note: "Follow-up on marketing campaign" },
-        { type: "call", date: "2024-01-08", note: "Initial consultation call" },
-      ],
-    },
-    {
-      id: 3,
-      name: "Amit Patel",
-      email: "amit@startupxyz.com",
-      phone: "+91 76543 21098",
-      company: "StartupXYZ",
-      position: "Founder",
-      location: "Bangalore, India",
-      category: "lead",
-      tags: ["Startup", "Tech"],
-      avatar: "/placeholder.svg",
-      lastContact: "2024-01-10",
-      dealValue: 75000,
-      status: "active",
-      notes: "Looking for cost-effective solutions",
-      socialMedia: {
-        linkedin: "amit-patel-startup",
-        twitter: "@amitpatel",
-      },
-      interactions: [
-        { type: "meeting", date: "2024-01-10", note: "Product presentation" },
-        { type: "call", date: "2024-01-05", note: "Discovery call" },
-      ],
-    },
-    {
-      id: 4,
-      name: "Sneha Reddy",
-      email: "sneha@enterprise.com",
-      phone: "+91 65432 10987",
-      company: "Enterprise Solutions",
-      position: "VP Sales",
-      location: "Hyderabad, India",
-      category: "client",
-      tags: ["Enterprise", "Long-term"],
-      avatar: "/placeholder.svg",
-      lastContact: "2024-01-08",
-      dealValue: 500000,
-      status: "active",
-      notes: "Strategic partnership opportunity",
-      socialMedia: {
-        linkedin: "sneha-reddy-enterprise",
-        twitter: "@snehareddy",
-      },
-      interactions: [
-        { type: "meeting", date: "2024-01-08", note: "Partnership discussion" },
-        { type: "email", date: "2024-01-03", note: "Contract negotiation" },
-      ],
-    },
-    {
-      id: 5,
-      name: "Vikash Singh",
-      email: "vikash@consulting.com",
-      phone: "+91 54321 09876",
-      company: "Consulting Group",
-      position: "Senior Consultant",
-      location: "Pune, India",
-      category: "partner",
-      tags: ["Consultant", "Referral"],
-      avatar: "/placeholder.svg",
-      lastContact: "2024-01-05",
-      dealValue: 0,
-      status: "active",
-      notes: "Potential referral partner",
-      socialMedia: {
-        linkedin: "vikash-singh-consulting",
-        twitter: "@vikashsingh",
-      },
-      interactions: [
-        { type: "call", date: "2024-01-05", note: "Partnership discussion" },
-        { type: "email", date: "2023-12-28", note: "Introduction email" },
-      ],
-    },
-  ])
+  // Fetch contacts from API
+  useEffect(() => {
+    const token = localStorage.getItem('login_token')
+    if (!token) {
+      setError("No authentication token found")
+      setLoading(false)
+      return
+    }
 
-  const [newContact, setNewContact] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
-    position: "",
-    location: "",
-    category: "lead",
-    tags: [],
-    notes: "",
-    socialMedia: {
-      linkedin: "",
-      twitter: "",
-    },
-  })
+    const fetchContacts = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.post(
+          "http://localhost/crm-solvonix/api/v1/user/contacts",
+          {
+            page: apiParams.page,
+            search: apiParams.search,
+            category: apiParams.category !== "all" ? apiParams.category : undefined,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+          }
+        )
 
+        console.log("API Response:", response.data)
+        
+        if (response.data && response.data.data) {
+          // Handle the paginated response
+          setContacts(response.data.data.data || [])
+          setPagination({
+            current_page: response.data.data.current_page,
+            last_page: response.data.data.last_page,
+            per_page: response.data.data.per_page,
+            total: response.data.data.total,
+            from: response.data.data.from,
+            to: response.data.data.to,
+          })
+        } else {
+          console.error("Unexpected API response structure:", response.data)
+          setError("Unexpected data format from server")
+        }
+      } catch (err) {
+        console.error("Error fetching contacts:", err)
+        setError(err.response?.data?.message || err.message || "Failed to fetch contacts")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchContacts()
+  }, [apiParams])
+
+  // Fetch form fields when add contact modal opens
+  useEffect(() => {
+    if (isAddContactOpen) {
+      fetchFormFields()
+    }
+  }, [isAddContactOpen])
+
+  // Fetch form fields from API
+  const fetchFormFields = async () => {
+    const token = localStorage.getItem('login_token')
+    if (!token) return
+
+    try {
+      setFormLoading(true)
+      const response = await axios.get(
+        "http://localhost/crm-solvonix/api/v1/user/get/contacts/fields",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (response.data.message === "success") {
+        const data = response.data.data
+        if (Array.isArray(data)) {
+          setFormFields(groupFieldsByGroup(data))
+        } else if (typeof data === "object") {
+          setFormFields(data)
+        } else {
+          setFormFields({})
+        }
+        
+        // Initialize empty form data
+        const initialFormData = {}
+        const allFields = Array.isArray(data) ? data : Object.values(data).flat()
+        allFields.forEach(field => {
+          initialFormData[field.field_name] = field.is_multiple ? [] : ''
+        })
+        setNewContact(initialFormData)
+      } else {
+        console.error("Failed to fetch fields:", response.data)
+        setSubmitStatus({ type: 'error', message: 'Failed to load form fields' })
+      }
+    } catch (err) {
+      console.error("Error fetching form fields:", err)
+      setSubmitStatus({ type: 'error', message: 'Failed to load form fields' })
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
+  // Group fields by field_group if API gives array
+  const groupFieldsByGroup = (fieldsArray) => {
+    if (!Array.isArray(fieldsArray)) return {}
+    const grouped = {}
+    fieldsArray.forEach(field => {
+      const group = field.field_group || 'Default'
+      if (!grouped[group]) grouped[group] = []
+      grouped[group].push(field)
+    })
+    return grouped
+  }
+
+  // Handle search with debounce
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setApiParams(prev => ({
+        ...prev,
+        search: searchTerm,
+        page: 1, // Reset to first page when searching
+      }))
+    }, 500)
+
+    return () => clearTimeout(handler)
+  }, [searchTerm])
+
+  // Handle category change
+  useEffect(() => {
+    setApiParams(prev => ({
+      ...prev,
+      category: selectedCategory,
+      page: 1, // Reset to first page when changing category
+    }))
+  }, [selectedCategory])
+
+  // Handle pagination
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= pagination.last_page) {
+      setApiParams(prev => ({
+        ...prev,
+        page: page,
+      }))
+      window.scrollTo(0, 0)
+    }
+  }
+
+  // Calculate category counts based on API data structure
   const categories = [
-    { id: "all", name: "All Contacts", count: contacts.length },
-    { id: "client", name: "Clients", count: contacts.filter((c) => c.category === "client").length },
-    { id: "prospect", name: "Prospects", count: contacts.filter((c) => c.category === "prospect").length },
-    { id: "lead", name: "Leads", count: contacts.filter((c) => c.category === "lead").length },
-    { id: "partner", name: "Partners", count: contacts.filter((c) => c.category === "partner").length },
+    { id: "all", name: "All Contacts", count: pagination.total },
+    // These would ideally come from the API, using placeholders for now
+    { id: "client", name: "Clients", count: Math.floor(pagination.total * 0.4) },
+    { id: "prospect", name: "Prospects", count: Math.floor(pagination.total * 0.3) },
+    { id: "lead", name: "Leads", count: Math.floor(pagination.total * 0.2) },
+    { id: "partner", name: "Partners", count: Math.floor(pagination.total * 0.1) },
   ]
 
-  // Enhanced filtering logic
-  const filteredContacts = contacts.filter((contact) => {
-    const matchesSearch =
-      contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.company.toLowerCase().includes(searchTerm.toLowerCase())
-
-    const matchesCategory = selectedCategory === "all" || contact.category === selectedCategory
-
-    // Tag filter
-    const matchesTags = filters.tags.length === 0 || filters.tags.some((tag) => contact.tags.includes(tag))
-
-    // Date range filter
-    let matchesDate = true
-    if (filters.dateRange !== "all") {
-      const contactDate = new Date(contact.lastContact)
-      const now = new Date()
-      const daysDiff = Math.floor((now - contactDate) / (1000 * 60 * 60 * 24))
-
-      switch (filters.dateRange) {
-        case "week":
-          matchesDate = daysDiff <= 7
-          break
-        case "month":
-          matchesDate = daysDiff <= 30
-          break
-        case "quarter":
-          matchesDate = daysDiff <= 90
-          break
-      }
-    }
-
-    // Deal value filter
-    let matchesDealValue = true
-    if (filters.dealValue !== "all") {
-      switch (filters.dealValue) {
-        case "high":
-          matchesDealValue = contact.dealValue >= 200000
-          break
-        case "medium":
-          matchesDealValue = contact.dealValue >= 50000 && contact.dealValue < 200000
-          break
-        case "low":
-          matchesDealValue = contact.dealValue < 50000
-          break
-      }
-    }
-
-    return matchesSearch && matchesCategory && matchesTags && matchesDate && matchesDealValue
-  })
+  // Get all unique tags for filter (would ideally come from API)
+  const allTags = ["VIP", "Enterprise", "Hot Lead", "Cold", "Follow-up"]
 
   // Export functionality
   const handleExport = (selectedOnly = false) => {
     const contactsToExport = selectedOnly
       ? contacts.filter((contact) => selectedContacts.includes(contact.id))
-      : filteredContacts
+      : contacts
 
     const csvContent = [
-      // CSV Headers
-      [
-        "Name",
-        "Email",
-        "Phone",
-        "Company",
-        "Position",
-        "Location",
-        "Category",
-        "Tags",
-        "Deal Value",
-        "Last Contact",
-        "Notes",
-      ].join(","),
+      // CSV Headers based on your API data
+      ["Name", "Email", "Mobile", "Date of Birth", "PAN Card"].join(","),
       // CSV Data
       ...contactsToExport.map((contact) =>
         [
-          `"${contact.name}"`,
-          `"${contact.email}"`,
-          `"${contact.phone}"`,
-          `"${contact.company}"`,
-          `"${contact.position}"`,
-          `"${contact.location}"`,
-          `"${contact.category}"`,
-          `"${contact.tags.join("; ")}"`,
-          contact.dealValue,
-          contact.lastContact,
-          `"${contact.notes}"`,
+          `"${contact.name || ""}"`,
+          `"${contact.email || ""}"`,
+          `"${contact.mobile || ""}"`,
+          `"${contact.date_of_birth || ""}"`,
+          `"${contact.pan_card || ""}"`,
         ].join(","),
       ),
     ].join("\n")
@@ -315,24 +287,16 @@ const ContactsPage = () => {
             id: Date.now() + i,
             name: values[0] || "",
             email: values[1] || "",
-            phone: values[2] || "",
-            company: values[3] || "",
-            position: values[4] || "",
-            location: values[5] || "",
-            category: values[6] || "lead",
-            tags: values[7] ? values[7].split(";").map((t) => t.trim()) : [],
-            dealValue: Number.parseInt(values[8]) || 0,
-            lastContact: values[9] || new Date().toISOString().split("T")[0],
-            notes: values[10] || "",
-            avatar: "/placeholder.svg",
-            status: "active",
-            socialMedia: { linkedin: "", twitter: "" },
-            interactions: [],
+            mobile: values[2] || "",
+            date_of_birth: values[3] || "",
+            pan_card: values[4] || "",
           }
 
           importedContacts.push(contact)
         }
 
+        // In a real app, you would send this to your API
+        // For now, we'll just add to local state
         setContacts([...contacts, ...importedContacts])
         setIsImportModalOpen(false)
         setImportFile(null)
@@ -350,42 +314,91 @@ const ContactsPage = () => {
     setIsContactDetailOpen(true)
   }
 
-  const handleAddContact = () => {
-    if (!newContact.name || !newContact.email) return
+  // Handle form field changes for dynamic form
+  const handleFormChange = (fieldName, value) => {
+    setNewContact(prev => ({ ...prev, [fieldName]: value }))
+  }
 
-    const contact = {
-      id: Date.now(),
-      ...newContact,
-      avatar: "/placeholder.svg",
-      lastContact: new Date().toISOString().split("T")[0],
-      dealValue: 0,
-      status: "active",
-      interactions: [],
+  // Handle add contact with dynamic form
+  const handleAddContact = async (e) => {
+    e.preventDefault()
+    
+    const token = localStorage.getItem('login_token')
+    if (!token) {
+      setSubmitStatus({ type: 'error', message: 'Authentication token not found' })
+      return
     }
 
-    setContacts([...contacts, contact])
-    setNewContact({
-      name: "",
-      email: "",
-      phone: "",
-      company: "",
-      position: "",
-      location: "",
-      category: "lead",
-      tags: [],
-      notes: "",
-      socialMedia: { linkedin: "", twitter: "" },
-    })
-    setIsAddContactOpen(false)
+    try {
+      setFormLoading(true)
+      
+      // Prepare data for API submission
+      const submissionData = {
+        salutation: newContact.salutation || "Mr.",
+        first_name: newContact.first_name || "",
+        middle_name: newContact.middle_name || "",
+        last_name: newContact.last_name || "",
+        email: newContact.email || "",
+        country_code: newContact.country_code || "+91",
+        mobile: newContact.mobile || "",
+        Adress: newContact.Adress || "",
+        // Add other fields as needed
+      }
+
+      // Add all other fields from the form
+      Object.keys(newContact).forEach(key => {
+        if (!submissionData.hasOwnProperty(key)) {
+          submissionData[key] = newContact[key]
+        }
+      })
+
+      console.log("Submitting contact data:", submissionData)
+
+      const response = await axios.post(
+        "http://localhost/crm-solvonix/api/v1/user/save/contact",
+        submissionData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+        }
+      )
+
+      console.log("Save contact response:", response.data)
+
+      if (response.data.message === "success") {
+        setSubmitStatus({ type: 'success', message: 'Contact saved successfully!' })
+        
+        // Refresh contacts list
+        setApiParams(prev => ({ ...prev }))
+        
+        // Close modal after a delay
+        setTimeout(() => {
+          setIsAddContactOpen(false)
+          setNewContact({})
+          setSubmitStatus({ type: '', message: '' })
+        }, 1500)
+      } else {
+        setSubmitStatus({ type: 'error', message: response.data.message || 'Failed to save contact' })
+      }
+    } catch (err) {
+      console.error("Error saving contact:", err)
+      setSubmitStatus({ type: 'error', message: err.response?.data?.message || 'Failed to save contact. Please try again.' })
+    } finally {
+      setFormLoading(false)
+    }
   }
 
   const handleSaveContact = () => {
+    // In a real app, you would send this to your API
     setContacts(contacts.map((contact) => (contact.id === editingContact.id ? editingContact : contact)))
     setIsContactDetailOpen(false)
   }
 
   const handleDeleteContact = (contactId) => {
     if (confirm("Are you sure you want to delete this contact?")) {
+      // In a real app, you would send this to your API
       setContacts(contacts.filter((contact) => contact.id !== contactId))
       setIsContactDetailOpen(false)
     }
@@ -393,6 +406,7 @@ const ContactsPage = () => {
 
   const handleBulkDelete = () => {
     if (confirm(`Are you sure you want to delete ${selectedContacts.length} contacts?`)) {
+      // In a real app, you would send this to your API
       setContacts(contacts.filter((contact) => !selectedContacts.includes(contact.id)))
       setSelectedContacts([])
     }
@@ -406,7 +420,7 @@ const ContactsPage = () => {
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedContacts(filteredContacts.map((c) => c.id))
+      setSelectedContacts(contacts.map((c) => c.id))
     } else {
       setSelectedContacts([])
     }
@@ -414,11 +428,19 @@ const ContactsPage = () => {
 
   // Quick actions
   const handleCall = (contact) => {
-    window.open(`tel:${contact.phone}`)
+    if (contact.mobile) {
+      window.open(`tel:${contact.mobile}`)
+    } else {
+      alert("No mobile number available for this contact")
+    }
   }
 
   const handleEmail = (contact) => {
-    window.open(`mailto:${contact.email}`)
+    if (contact.email) {
+      window.open(`mailto:${contact.email}`)
+    } else {
+      alert("No email address available for this contact")
+    }
   }
 
   const handleScheduleMeeting = (contact) => {
@@ -435,18 +457,188 @@ const ContactsPage = () => {
     return colors[category] || "bg-gray-100 text-gray-800"
   }
 
-  const getInteractionIcon = (type) => {
-    const icons = {
-      call: <Phone className="w-3 h-3" />,
-      email: <Mail className="w-3 h-3" />,
-      meeting: <Calendar className="w-3 h-3" />,
-      message: <MessageCircle className="w-3 h-3" />,
+  // Parse options for dynamic form fields
+  const parseOptions = (optionsString) => {
+    if (!optionsString) return []
+    if (['countries', 'states', 'genders'].includes(optionsString)) {
+      const predefinedLists = {
+        countries: ["United States", "Canada", "UK", "Australia", "Germany", "France", "Japan", "India", "Brazil", "Mexico"],
+        states: ["California", "Texas", "New York", "Florida", "Illinois", "Pennsylvania", "Ohio", "Georgia", "North Carolina", "Michigan"],
+        genders: ["Male", "Female", "Non-binary", "Prefer not to say"]
+      }
+      return predefinedLists[optionsString].map(v => ({ label: v, value: v }))
     }
-    return icons[type] || <Clock className="w-3 h-3" />
+    return optionsString.split(',').map(v => ({ label: v.trim(), value: v.trim() }))
   }
 
-  // Get all unique tags for filter
-  const allTags = [...new Set(contacts.flatMap((contact) => contact.tags))]
+  // Render dynamic form fields
+  const renderField = (field) => {
+    const baseClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    const isRequired = field.is_required === 1
+    const fieldOptions = parseOptions(field.field_options)
+    const currentValue = newContact[field.field_name] ?? (field.is_multiple ? [] : '')
+
+    switch (field.field_type) {
+      case "String":
+        return (
+          <input
+            type="text"
+            className={baseClasses}
+            placeholder={field.placeholder || ""}
+            required={isRequired}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, e.target.value)}
+          />
+        )
+      case "Date":
+        return (
+          <input
+            type="date"
+            className={baseClasses}
+            required={isRequired}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, e.target.value)}
+          />
+        )
+      case "DateTime":
+        return (
+          <input
+            type="datetime-local"
+            className={baseClasses}
+            required={isRequired}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, e.target.value)}
+          />
+        )
+      case "Integer":
+        return (
+          <input
+            type="number"
+            step="1"
+            className={baseClasses}
+            required={isRequired}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, parseInt(e.target.value) || "")}
+          />
+        )
+      case "Decimal":
+        return (
+          <input
+            type="number"
+            step="0.01"
+            className={baseClasses}
+            required={isRequired}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, parseFloat(e.target.value) || "")}
+          />
+        )
+      case "LargeText":
+        return (
+          <textarea
+            className={baseClasses}
+            placeholder={field.placeholder || ""}
+            required={isRequired}
+            rows={4}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, e.target.value)}
+          />
+        )
+      case "Email":
+        return (
+          <input
+            type="email"
+            className={baseClasses}
+            placeholder={field.placeholder || "example@email.com"}
+            required={isRequired}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, e.target.value)}
+          />
+        )
+      case "Options":
+        if (field.is_multiple === 1) {
+          const selectedValues = Array.isArray(currentValue) ? currentValue : []
+          return (
+            <div className="space-y-2">
+              {fieldOptions.map((opt, i) => (
+                <label key={i} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedValues.includes(opt.value)}
+                    onChange={e => {
+                      const updated = e.target.checked
+                        ? [...selectedValues, opt.value]
+                        : selectedValues.filter(v => v !== opt.value)
+                      handleFormChange(field.field_name, updated)
+                    }}
+                    className="rounded"
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          )
+        } else {
+          return (
+            <div className="space-y-2">
+              {fieldOptions.map((opt, i) => (
+                <label key={i} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name={field.field_name}
+                    value={opt.value}
+                    checked={currentValue === opt.value}
+                    onChange={e => handleFormChange(field.field_name, e.target.value)}
+                    className="rounded-full"
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          )
+        }
+      case "List":
+        return (
+          <select
+            className={baseClasses}
+            required={isRequired}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, e.target.value)}
+          >
+            <option value="">-- Select --</option>
+            {fieldOptions.map((opt, i) => (
+              <option key={i} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        )
+      case "File":
+        return (
+          <input
+            type="file"
+            className={baseClasses}
+            required={isRequired}
+            multiple={field.is_multiple === 1}
+            onChange={e => handleFormChange(
+              field.field_name, 
+              field.is_multiple === 1 ? Array.from(e.target.files) : e.target.files[0]
+            )}
+          />
+        )
+      default:
+        return (
+          <input
+            type="text"
+            className={baseClasses}
+            placeholder={field.placeholder || ""}
+            required={isRequired}
+            value={currentValue}
+            onChange={e => handleFormChange(field.field_name, e.target.value)}
+          />
+        )
+    }
+  }
+
+  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p>Loading...</p></div>
+  if (error) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-red-500">{error}</p></div>
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -490,26 +682,28 @@ const ContactsPage = () => {
                 <User className="w-8 h-8 text-blue-600" />
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Total Contacts</p>
-                  <p className="text-2xl font-bold text-gray-900">{contacts.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{pagination.total}</p>
                 </div>
               </div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-center">
-                <Building className="w-8 h-8 text-green-600" />
+                <Mail className="w-8 h-8 text-green-600" />
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-600">Companies</p>
-                  <p className="text-2xl font-bold text-gray-900">{new Set(contacts.map((c) => c.company)).size}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center">
-                <Star className="w-8 h-8 text-yellow-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-600">VIP Contacts</p>
+                  <p className="text-sm font-medium text-gray-600">With Email</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {contacts.filter((c) => c.tags.includes("VIP")).length}
+                    {contacts.filter((c) => c.email).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center">
+                <Phone className="w-8 h-8 text-yellow-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-600">With Mobile</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {contacts.filter((c) => c.mobile).length}
                   </p>
                 </div>
               </div>
@@ -518,12 +712,9 @@ const ContactsPage = () => {
               <div className="flex items-center">
                 <Calendar className="w-8 h-8 text-purple-600" />
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-600">Recent Contacts</p>
+                  <p className="text-sm font-medium text-gray-600">This Page</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {
-                      contacts.filter((c) => new Date(c.lastContact) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
-                        .length
-                    }
+                    {contacts.length} of {pagination.total}
                   </p>
                 </div>
               </div>
@@ -570,79 +761,13 @@ const ContactsPage = () => {
                   </button>
                 </div>
               )}
-              <div className="flex items-center border border-gray-300 rounded-lg">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 ${viewMode === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-400"}`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 ${viewMode === "list" ? "bg-blue-100 text-blue-600" : "text-gray-400"}`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
             </div>
           </div>
 
           {/* Advanced Filters */}
           {showFilters && (
             <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-                  <select
-                    multiple
-                    value={filters.tags}
-                    onChange={(e) =>
-                      setFilters({ ...filters, tags: Array.from(e.target.selectedOptions, (option) => option.value) })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    {allTags.map((tag) => (
-                      <option key={tag} value={tag}>
-                        {tag}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Contact</label>
-                  <select
-                    value={filters.dateRange}
-                    onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="all">All Time</option>
-                    <option value="week">Last Week</option>
-                    <option value="month">Last Month</option>
-                    <option value="quarter">Last Quarter</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Deal Value</label>
-                  <select
-                    value={filters.dealValue}
-                    onChange={(e) => setFilters({ ...filters, dealValue: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="all">All Values</option>
-                    <option value="high">High (₹2L+)</option>
-                    <option value="medium">Medium (₹50K-₹2L)</option>
-                    <option value="low">Low (&lt;₹50K)</option>
-                  </select>
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => setFilters({ tags: [], dateRange: "all", dealValue: "all" })}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                >
-                  Clear Filters
-                </button>
-              </div>
+              {/* Filter fields would go here */}
             </div>
           )}
         </div>
@@ -667,206 +792,170 @@ const ContactsPage = () => {
             </div>
           </div>
 
-          {/* Contacts Grid/List */}
+          {/* Contacts List */}
           <div className="sm:flex-1 w-[100%]">
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredContacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => handleContactClick(contact)}
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                          {contact.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{contact.name}</h3>
-                          <p className="text-sm text-gray-600">{contact.position}</p>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={selectedContacts.includes(contact.id)}
-                        onChange={(e) => {
-                          e.stopPropagation()
-                          handleSelectContact(contact.id)
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                    </div>
-
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Building className="w-4 h-4" />
-                        <span>{contact.company}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Mail className="w-4 h-4" />
-                        <span className="truncate">{contact.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4" />
-                        <span>{contact.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <MapPin className="w-4 h-4" />
-                        <span>{contact.location}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(contact.category)}`}>
-                        {contact.category}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {contact.tags.slice(0, 2).map((tag, index) => (
-                          <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Last contact:</span>
-                        <span className="text-gray-900">{new Date(contact.lastContact).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-3 text-left">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300"
+                          checked={selectedContacts.length === contacts.length && contacts.length > 0}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Contact
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Mobile
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date of Birth
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        PAN Card
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {contacts.map((contact) => (
+                      <tr key={contact.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
                           <input
                             type="checkbox"
+                            checked={selectedContacts.includes(contact.id)}
+                            onChange={() => handleSelectContact(contact.id)}
                             className="rounded border-gray-300"
-                            checked={selectedContacts.length === filteredContacts.length && filteredContacts.length > 0}
-                            onChange={(e) => handleSelectAll(e.target.checked)}
                           />
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Contact
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Company
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Category
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Deal Value
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Last Contact
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                              {contact.name
+                                ?.split(" ")
+                                .map((n) => n[0])
+                                .join("") || "?"}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {contact.name || "Unnamed Contact"}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">{contact.email || "No email"}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">{contact.mobile || "No mobile"}</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {contact.date_of_birth || "Unknown"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {contact.pan_card || "Unknown"}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleContactClick(contact)
+                              }}
+                              className="text-blue-600 hover:text-blue-700"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleCall(contact)
+                              }}
+                              className="text-green-600 hover:text-green-700"
+                              title="Call"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEmail(contact)
+                              }}
+                              className="text-blue-600 hover:text-blue-700"
+                              title="Email"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteContact(contact.id)
+                              }}
+                              className="text-red-400 hover:text-red-600"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {filteredContacts.map((contact) => (
-                        <tr key={contact.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedContacts.includes(contact.id)}
-                              onChange={() => handleSelectContact(contact.id)}
-                              className="rounded border-gray-300"
-                            />
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                {contact.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </div>
-                              <div>
-                                <div className="font-medium text-gray-900">{contact.name}</div>
-                                <div className="text-sm text-gray-500">{contact.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900">{contact.company}</div>
-                            <div className="text-sm text-gray-500">{contact.position}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(contact.category)}`}>
-                              {contact.category}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900">₹{contact.dealValue.toLocaleString()}</td>
-                          <td className="px-6 py-4 text-sm text-gray-900">
-                            {new Date(contact.lastContact).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleContactClick(contact)
-                                }}
-                                className="text-blue-600 hover:text-blue-700"
-                                title="View Details"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleCall(contact)
-                                }}
-                                className="text-green-600 hover:text-green-700"
-                                title="Call"
-                              >
-                                <Phone className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleEmail(contact)
-                                }}
-                                className="text-blue-600 hover:text-blue-700"
-                                title="Email"
-                              >
-                                <Mail className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteContact(contact.id)
-                                }}
-                                className="text-red-400 hover:text-red-600"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{pagination.from}</span> to <span className="font-medium">{pagination.to}</span> of{' '}
+                  <span className="font-medium">{pagination.total}</span> results
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handlePageChange(pagination.current_page - 1)}
+                    disabled={pagination.current_page === 1}
+                    className="px-3 py-1 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  
+                  {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-1 rounded-md border text-sm font-medium ${
+                        pagination.current_page === page
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => handlePageChange(pagination.current_page + 1)}
+                    disabled={pagination.current_page === pagination.last_page}
+                    className="px-3 py-1 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
 
-            {filteredContacts.length === 0 && (
+            {contacts.length === 0 && (
               <div className="text-center py-12">
                 <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No contacts found</h3>
@@ -905,7 +994,7 @@ const ContactsPage = () => {
                     <div className="text-sm text-blue-800">
                       <p className="font-medium mb-1">CSV Format Required:</p>
                       <p>
-                        Name, Email, Phone, Company, Position, Location, Category, Tags, Deal Value, Last Contact, Notes
+                        Name, Email, Mobile, Date of Birth, PAN Card
                       </p>
                     </div>
                   </div>
@@ -931,10 +1020,10 @@ const ContactsPage = () => {
           </div>
         )}
 
-        {/* Add Contact Modal */}
+        {/* Add Contact Modal with Dynamic Form */}
         {isAddContactOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Add New Contact</h2>
                 <button onClick={() => setIsAddContactOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -942,130 +1031,56 @@ const ContactsPage = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                    <input
-                      type="text"
-                      value={newContact.name}
-                      onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                    <input
-                      type="email"
-                      value={newContact.email}
-                      onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <input
-                      type="text"
-                      value={newContact.phone}
-                      onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                    <input
-                      type="text"
-                      value={newContact.company}
-                      onChange={(e) => setNewContact({ ...newContact, company: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+              {submitStatus.message && (
+                <div className={`mb-6 p-3 rounded ${submitStatus.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {submitStatus.message}
                 </div>
+              )}
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                    <input
-                      type="text"
-                      value={newContact.position}
-                      onChange={(e) => setNewContact({ ...newContact, position: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <input
-                      type="text"
-                      value={newContact.location}
-                      onChange={(e) => setNewContact({ ...newContact, location: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                    <select
-                      value={newContact.category}
-                      onChange={(e) => setNewContact({ ...newContact, category: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              {formLoading ? (
+                <div className="text-center py-10">
+                  <p>Loading form fields...</p>
+                </div>
+              ) : Object.keys(formFields).length === 0 ? (
+                <div className="text-center py-10 text-gray-600">
+                  No form fields configured. Please use the Form Builder to create fields first.
+                </div>
+              ) : (
+                <form onSubmit={handleAddContact} className="space-y-8">
+                  {Object.keys(formFields).map((group, index) => (
+                    <div key={index} className="bg-gray-50 p-5 rounded-xl shadow-sm">
+                      <h4 className="text-lg font-semibold text-blue-600 mb-4">{group}</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {formFields[group]
+                          .sort((a, b) => a.priority - b.priority)
+                          .map((field, i) => (
+                            <div key={i} className="flex flex-col">
+                              <label className="mb-1 text-sm font-medium text-gray-700">
+                                {field.display_text} {field.is_required === 1 && <span className="text-red-500">*</span>}
+                              </label>
+                              {renderField(field)}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setIsAddContactOpen(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
-                      <option value="lead">Lead</option>
-                      <option value="prospect">Prospect</option>
-                      <option value="client">Client</option>
-                      <option value="partner">Partner</option>
-                    </select>
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {formLoading ? 'Saving...' : 'Add Contact'}
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
-                    <input
-                      type="text"
-                      value={newContact.tags.join(", ")}
-                      onChange={(e) =>
-                        setNewContact({
-                          ...newContact,
-                          tags: e.target.value
-                            .split(",")
-                            .map((tag) => tag.trim())
-                            .filter((tag) => tag),
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="VIP, Enterprise, Hot Lead"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea
-                  value={newContact.notes}
-                  onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setIsAddContactOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddContact}
-                  disabled={!newContact.name || !newContact.email}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Add Contact
-                </button>
-              </div>
+                </form>
+              )}
             </div>
           </div>
         )}
@@ -1106,99 +1121,34 @@ const ContactsPage = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
                       <input
                         type="text"
-                        value={editingContact.phone || ""}
-                        onChange={(e) => setEditingContact({ ...editingContact, phone: e.target.value })}
+                        value={editingContact.mobile || ""}
+                        onChange={(e) => setEditingContact({ ...editingContact, mobile: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                      <input
+                        type="date"
+                        value={editingContact.date_of_birth || ""}
+                        onChange={(e) => setEditingContact({ ...editingContact, date_of_birth: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">PAN Card</label>
                       <input
                         type="text"
-                        value={editingContact.company || ""}
-                        onChange={(e) => setEditingContact({ ...editingContact, company: e.target.value })}
+                        value={editingContact.pan_card || ""}
+                        onChange={(e) => setEditingContact({ ...editingContact, pan_card: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                      <input
-                        type="text"
-                        value={editingContact.position || ""}
-                        onChange={(e) => setEditingContact({ ...editingContact, position: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                      <input
-                        type="text"
-                        value={editingContact.location || ""}
-                        onChange={(e) => setEditingContact({ ...editingContact, location: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                      <select
-                        value={editingContact.category || ""}
-                        onChange={(e) => setEditingContact({ ...editingContact, category: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="lead">Lead</option>
-                        <option value="prospect">Prospect</option>
-                        <option value="client">Client</option>
-                        <option value="partner">Partner</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Deal Value</label>
-                      <input
-                        type="number"
-                        value={editingContact.dealValue || 0}
-                        onChange={(e) =>
-                          setEditingContact({ ...editingContact, dealValue: Number.parseInt(e.target.value) || 0 })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                    <input
-                      type="text"
-                      value={editingContact.tags?.join(", ") || ""}
-                      onChange={(e) =>
-                        setEditingContact({
-                          ...editingContact,
-                          tags: e.target.value
-                            .split(",")
-                            .map((tag) => tag.trim())
-                            .filter((tag) => tag),
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="VIP, Enterprise, Hot Lead"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                    <textarea
-                      value={editingContact.notes || ""}
-                      onChange={(e) => setEditingContact({ ...editingContact, notes: e.target.value })}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
                   </div>
                 </div>
 
@@ -1208,17 +1158,13 @@ const ContactsPage = () => {
                   <div className="text-center">
                     <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
                       {selectedContact.name
-                        .split(" ")
+                        ?.split(" ")
                         .map((n) => n[0])
-                        .join("")}
+                        .join("") || "?"}
                     </div>
-                    <h3 className="font-semibold text-lg">{selectedContact.name}</h3>
-                    <p className="text-gray-600">{selectedContact.position}</p>
-                    <span
-                      className={`inline-block mt-2 text-xs px-2 py-1 rounded-full ${getCategoryColor(selectedContact.category)}`}
-                    >
-                      {selectedContact.category}
-                    </span>
+                    <h3 className="font-semibold text-lg">
+                      {selectedContact.name || "Unnamed Contact"}
+                    </h3>
                   </div>
 
                   {/* Quick Actions */}
@@ -1245,22 +1191,6 @@ const ContactsPage = () => {
                       Schedule Meeting
                     </button>
                   </div>
-
-                  {/* Recent Interactions */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Recent Interactions</h4>
-                    <div className="space-y-3">
-                      {selectedContact.interactions?.slice(0, 3).map((interaction, index) => (
-                        <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="text-blue-600">{getInteractionIcon(interaction.type)}</div>
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900">{interaction.note}</p>
-                            <p className="text-xs text-gray-500">{new Date(interaction.date).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -1284,7 +1214,7 @@ const ContactsPage = () => {
                   <button
                     onClick={handleSaveContact}
                     className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
-                  >
+                    >
                     Save Changes
                   </button>
                 </div>
