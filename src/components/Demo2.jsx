@@ -43,16 +43,16 @@ const PREDEFINED_LISTS = {
 
 /* Available master list (left column) */
 const AVAILABLE_FIELDS = [
-  { key: "string", label: "Text", type: "string", "is_email":0, defaultConfig: { placeholder: "" } },
-  { key: "large_text", label: "Large Text", "is_email":0, type: "large_text", defaultConfig: { placeholder: "", rows: 4 } },
-  { key: "list", label: "List", type: "list","is_email":0, defaultConfig: { itemPlaceholder: "", predefinedList: null, customItems: [] } },
-  { key: "date", label: "Date", type: "date","is_email":0, defaultConfig: {} },
-  { key: "datetime", label: "Date & Time", type: "datetime","is_email":0, defaultConfig: {} },
-  { key: "integer", label: "Integer", type: "integer","is_email":0, defaultConfig: { placeholder: "", min: null, max: null } },
-  { key: "decimal", label: "Decimal", type: "decimal","is_email":0, defaultConfig: { placeholder: "", step: 0.01 } },
-  { key: "file", label: "File", type: "file","is_email":0, defaultConfig: { accept: ".png,.jpg", multiple: false } },
-  { key: "options", label: "Options", type: "options","is_email":0, defaultConfig: { options: ["Option 1", "Option 2"], inputType: "radio" } },
-  { key: "email", label: "Email", type: "email","is_email":0, defaultConfig: { placeholder: "" } },
+  { key: "string", label: "Text", type: "string", defaultConfig: { placeholder: "" } },
+  { key: "large_text", label: "Large Text", type: "large_text", defaultConfig: { placeholder: "", rows: 4 } },
+  { key: "list", label: "List", type: "list", defaultConfig: { itemPlaceholder: "", predefinedList: null, customItems: [] } },
+  { key: "date", label: "Date", type: "date", defaultConfig: {} },
+  { key: "datetime", label: "Date & Time", type: "datetime", defaultConfig: {} },
+  { key: "integer", label: "Integer", type: "integer", defaultConfig: { placeholder: "", min: null, max: null } },
+  { key: "decimal", label: "Decimal", type: "decimal", defaultConfig: { placeholder: "", step: 0.01 } },
+  { key: "file", label: "File", type: "file", defaultConfig: { accept: ".png,.jpg", multiple: false } },
+  { key: "options", label: "Options", type: "options", defaultConfig: { options: ["Option 1", "Option 2"], inputType: "radio" } },
+  { key: "email", label: "Email", type: "email", defaultConfig: { placeholder: "" } },
 ];
 
 // Mapping between internal field types and API field types
@@ -349,8 +349,7 @@ export default function FormBuilder() {
     type: "string", 
     required: false, 
     group: "", 
-    config: {} ,
-    is_email:0
+    config: {} 
   });
 
   // API state
@@ -665,7 +664,7 @@ export default function FormBuilder() {
       });
 
       const result = await response.json();
-      console.log(response);
+      console.log(response)
       
       if (response.ok) {
         setSaveMessage({ 

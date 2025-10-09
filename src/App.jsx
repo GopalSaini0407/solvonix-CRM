@@ -21,6 +21,10 @@ import Demo from './components/Demo'
 import Demo2 from './components/Demo2'
 import Demo3 from './components/Demo3'
 import CustomContacts from './myComponents/CustomContacts';
+import AddLeadStage from './components/AddLeadStage';
+import LeadStages from './components/LeadStage';
+import AddDynamicFields from './components/dynamic fields/AddDynamicFields';
+import ViewDynamicFields from './components/dynamic fields/ViewDynamicFields'
 
 import { ThemeProvider } from './contextAPI/contextTheme/ThemeContext';
 import { AuthProvider } from './contextAPI/contextAuth/AuthContext';
@@ -49,7 +53,11 @@ function AppRoutes() {
           <Route path='/demo' element={<Demo/>} />
           <Route path='/demo2' element={<Demo2 />} />
           <Route path='/demo3' element={<Demo3 />} />
+          <Route path='/demo4' element={<AddDynamicFields />} />
+          <Route path='/demo5' element={<ViewDynamicFields />} />
 
+           <Route path="/add-lead-stage" element={<AddLeadStage/>}/>
+           <Route path='/lead-stage' element={<LeadStages/>}/>
 
 
           <Route path='/' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
