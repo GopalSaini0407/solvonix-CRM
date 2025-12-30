@@ -56,9 +56,11 @@ const ContactsPage = () => {
   })
   const [apiParams, setApiParams] = useState({
     page: 1,
+    start_date: "2025-03-05",
+    end_date: "2025-06-01",
     search: "",
-    category: "all",
   })
+  
 
   // Dynamic form state
   const [formFields, setFormFields] = useState({})
@@ -84,9 +86,11 @@ const ContactsPage = () => {
           "http://localhost/crm-solvonix/api/v1/user/contacts",
           {
             page: apiParams.page,
-            search: apiParams.search,
-            category: apiParams.category !== "all" ? apiParams.category : undefined,
-          },
+            start_date: apiParams.start_date,
+            end_date: apiParams.end_date,
+            ...(apiParams.search && { search: apiParams.search })
+          }
+          ,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -201,13 +205,13 @@ const ContactsPage = () => {
   }, [searchTerm])
 
   // Handle category change
-  useEffect(() => {
-    setApiParams(prev => ({
-      ...prev,
-      category: selectedCategory,
-      page: 1, // Reset to first page when changing category
-    }))
-  }, [selectedCategory])
+  // useEffect(() => {
+  //   setApiParams(prev => ({
+  //     ...prev,
+  //     category: selectedCategory,
+  //     page: 1, // Reset to first page when changing category
+  //   }))
+  // }, [selectedCategory])
 
   // Handle pagination
   const handlePageChange = (page) => {
@@ -473,7 +477,7 @@ const ContactsPage = () => {
 
   // Render dynamic form fields
   const renderField = (field) => {
-    const baseClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    const baseClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 outline-none focus:ring-blue-500 focus:border-transparent"
     const isRequired = field.is_required === 1
     const fieldOptions = parseOptions(field.field_options)
     const currentValue = newContact[field.field_name] ?? (field.is_multiple ? [] : '')
@@ -967,7 +971,7 @@ const ContactsPage = () => {
 
         {/* Import Modal */}
         {isImportModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 z-50 bg-black/40  flex items-center justify-center">
             <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Import Contacts</h2>
@@ -1022,7 +1026,7 @@ const ContactsPage = () => {
 
         {/* Add Contact Modal with Dynamic Form */}
         {isAddContactOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Add New Contact</h2>

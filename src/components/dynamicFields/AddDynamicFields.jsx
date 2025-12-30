@@ -84,8 +84,8 @@ export default function AddDynamicFields() {
   };
 
   return (
-    <div className="max-w-8xl mx-auto p-6">
-      <div className="grid md:grid-cols-4 gap-6">
+    <div className="max-w-8xl mx-auto">
+      <div className="grid md:grid-cols-4">
         {/* Left: available fields */}
         <div className="col-span-1">
           <h1 className="text-xl font-bold mb-4">Available Fields</h1>

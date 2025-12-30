@@ -1102,6 +1102,7 @@ export default function FormBuilder() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white w-full max-w-2xl rounded-lg shadow-lg overflow-hidden">
+            
             <div className="p-4 border-b">
               <h3 className="text-lg font-semibold">{editingId ? "Edit Field" : "Add Field"}</h3>
             </div>

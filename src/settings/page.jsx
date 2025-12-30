@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import {
   Settings,
   Palette,
@@ -25,10 +25,21 @@ import {
   GripVertical,
 } from "lucide-react"
 
-import Demo2 from '../components/Demo2'
 import LeadStages from "../components/LeadStage"
+import AddDynamicFields from "../components/dynamicFields/AddDynamicFields"
+import {useSearchParams,useNavigate} from "react-router-dom"
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("general")
+
+  const [searchParams,setSearchParams]=useSearchParams()
+  const navigate=useNavigate();
+
+  const urlTab=searchParams.get("tab") || "general"
+
+
+
+
+
+  const [activeTab, setActiveTab] = useState(urlTab)
   const [isSaving, setIsSaving] = useState(false)
   const [editingStageId, setEditingStageId] = useState(null)
   const [showAddStageAt, setShowAddStageAt] = useState(null)
@@ -365,6 +376,17 @@ export default function SettingsPage() {
   // Sort stages by order for display
   const sortedStages = [...settings.pipelineStages].sort((a, b) => a.order - b.order)
 
+  useEffect(()=>{
+    setSearchParams({tab:activeTab})
+    
+  },[activeTab,setSearchParams])
+
+  const handleTabChange=(tabId)=>{
+    setActiveTab(tabId)
+
+    navigate(`?tab=${tabId}`,{replace:true})
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-sm overflow-hidden">
@@ -413,7 +435,7 @@ export default function SettingsPage() {
               ].map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => setActiveTab(category.id)}
+                  onClick={() => handleTabChange(category.id)}
                   className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm ${
                     activeTab === category.id
                       ? "bg-blue-50 text-blue-700 font-medium"
@@ -950,7 +972,7 @@ export default function SettingsPage() {
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Contacts Settings</h2>
 
                 <div className="space-y-6">
-                 <Demo2/>
+                 <AddDynamicFields/>
                 </div>
               </div>
             )}

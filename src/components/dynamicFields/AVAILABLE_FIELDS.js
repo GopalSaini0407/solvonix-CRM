@@ -9,8 +9,8 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: "",
       field_options: null,
-      priority: 0,
-      is_required: 1,
+      priority: 1,
+      is_required: 0,
       is_email: 0
     },
     {
@@ -22,7 +22,7 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: "",
       field_options: null,
-      priority: 0,
+      priority: 1,
       is_required: 0,
       is_email: 0
     },
@@ -35,7 +35,7 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: "",
       field_options: "Option 1, Option 2, Option 3",
-      priority: 0,
+      priority: 1,
       is_required: 0,
       is_email: 0
     },
@@ -48,7 +48,7 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: "",
       field_options: null,
-      priority: 0,
+      priority: 1,
       is_required: 0,
       is_email: 0
     },
@@ -61,7 +61,7 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: "",
       field_options: null,
-      priority: 0,
+      priority: 1,
       is_required: 0,
       is_email: 0
     },
@@ -74,7 +74,7 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: "",
       field_options: null,
-      priority: 0,
+      priority: 1,
       is_required: 0,
       is_email: 0
     },
@@ -87,7 +87,7 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: " ",
       field_options: null,
-      priority: 0,
+      priority: 1,
       is_required: 0,
       is_email: 0
     },
@@ -100,7 +100,7 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: "",
       field_options: "",
-      priority: 0,
+      priority: 1,
       is_required: 0,
       is_email: 0
     },
@@ -113,7 +113,7 @@ export const AVAILABLE_FIELDS = [
       field_group: "",
       placeholder: "",
       field_options: "Option 1, Option 2",
-      priority: 0,
+      priority: 1,
       is_required: 0,
       is_email: 0
     },
